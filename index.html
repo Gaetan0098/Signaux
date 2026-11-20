@@ -62,7 +62,7 @@ header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-con
 
 .grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;margin-top:24px}
 @media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
-@media (max-width:520px){.wrap{padding:16px 12px 40px}.panel{padding:14px 12px}.pill{min-width:0;padding:6px 10px;font-size:.85rem}.row{gap:8px;padding:12px 4px}.name{display:none}}
+@media (max-width:520px){.wrap{padding:16px 12px 40px}.panel{padding:14px 12px}.pill{min-width:0;padding:6px 10px;font-size:.85rem}.row{gap:8px;padding:12px 4px}}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
 .panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px;flex-wrap:wrap}
 
@@ -73,7 +73,7 @@ header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-con
 .row[aria-selected="true"]{background:var(--bg);box-shadow:inset 3px 0 0 var(--ink)}
 .rank{font-weight:800;font-size:1.1rem;color:var(--muted);text-align:right}
 .tick{font-weight:800;font-size:1.05rem}
-.name{color:var(--muted);font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.name{color:var(--muted);font-size:.85rem;font-weight:600;white-space:nowrap}
 .meter{height:6px;background:var(--line);border-radius:3px;margin-top:6px;overflow:hidden}
 .meter span{display:block;height:100%;background:var(--mm20)}
 .ratio{font-size:.8rem;color:var(--muted);margin-top:3px}
@@ -169,6 +169,7 @@ select{font:inherit;color:inherit;background:var(--surface);border:1px solid var
 .form.vente{background:var(--sell-bg);border-radius:10px;padding:10px}
 .form.achat-pre{background:var(--buy-bg);border-radius:10px;padding:10px}
 .actbar{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+#portfolio td:first-child,#ventes td:nth-child(2){white-space:normal;min-width:10rem}
 /* fiche détail (mobile) */
 .sheet{position:fixed;inset:0;z-index:30;background:rgba(10,18,30,.45);display:flex;align-items:flex-end}
 .sheet[hidden]{display:none}
@@ -216,7 +217,7 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
         <div class="panel">
           <div class="panel-head">
             <h2>Classement MM20/MM200</h2>
-            <span class="muted small">Actions dont la MM20 est au-dessus de la MM200</span>
+            <span class="muted small" id="boardInfo">Les 50 meilleurs ratios parmi les actions dont la MM20 est au-dessus de la MM200</span>
           </div>
           <ol class="board" id="board" role="listbox" aria-label="Classement par ratio MM20/MM200"></ol>
         </div>
@@ -308,6 +309,9 @@ var $=function(id){return document.getElementById(id)};
 var fmt=function(v,d){return v==null||isNaN(v)?"–":v.toLocaleString("fr-FR",{minimumFractionDigits:d==null?2:d,maximumFractionDigits:d==null?2:d})};
 var pct=function(v){return v==null||isNaN(v)?"–":(v>=0?"+":"")+fmt(v*100,1)+" %"};
 var esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
+function nomDe(t){var r=S.byTicker[String(t).toUpperCase()];return r&&r.n&&r.n!==r.t?r.n:null}
+function libelle(t){var n=nomDe(t);return n?'<span class="tick">'+esc(n)+'</span> <span class="name">– '+esc(String(t).toUpperCase())+'</span>':'<span class="tick">'+esc(String(t).toUpperCase())+'</span>'}
+function libelleTxt(t){var n=nomDe(t);return n?n+" – "+String(t).toUpperCase():String(t).toUpperCase()}
 var dateFR=function(iso){return new Date(iso+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})};
 
 /* ---------- calculs ---------- */
@@ -377,7 +381,7 @@ function update(silent){
       LS.set("mm.checked",S.checkedAt);renderStatus();
       if(!silent)showBanner(before&&before===data.genere_le?"Déjà à jour : pas de nouvelle séance depuis la dernière mise à jour.":"",true);
     })
-    .catch(function(e){var msg=e instanceof TypeError?"Pas de connexion. Les derniers signaux enregistrés restent affichés.":e.message;if(!silent||!S.data)showBanner(msg,false,true)})
+    .catch(function(e){console.log("ERRDBG "+e.stack);var msg=e instanceof TypeError?"Pas de connexion. Les derniers signaux enregistrés restent affichés.":e.message;if(!silent||!S.data)showBanner(msg,false,true)})
     .then(function(){btn.disabled=false;btn.textContent="Mise à jour"});
 }
 
@@ -393,7 +397,7 @@ function renderStatus(){
 function orderRow(kind,label,r,t,qtyHtml,why){
   var act=kind==="buy"?"achat":"vente";
   return '<div class="order" data-t="'+esc(t)+'"><button class="pill '+kind+'" data-act="'+act+'" data-t="'+esc(t)+'" aria-label="'+label+' '+esc(t)+' : enregistrer dans le portefeuille">'+label+'</button>'+
-    '<button class="order-main" data-t="'+esc(t)+'" aria-label="Voir le détail de '+esc(t)+'"><div><span class="tick">'+esc(t)+'</span> <span class="name">'+esc(r?r.n:"")+'</span></div><div class="why">'+esc(why)+'</div></button>'+
+    '<button class="order-main" data-t="'+esc(t)+'" aria-label="Voir le détail de '+esc(libelleTxt(t))+'"><div>'+libelle(t)+'</div><div class="why">'+esc(why)+'</div></button>'+
     '<div class="qty">'+qtyHtml+'</div></div>';
 }
 function renderOrders(){
@@ -419,19 +423,20 @@ function renderOrders(){
     h+='<p class="empty" style="padding:8px 0">Rien à faire : '+(p.keeps.length?"toutes vos lignes restent en tendance et le portefeuille est complet.":"aucune place libre.")+'</p>';
   }
   if(p.keeps.length){
-    h+='<div class="sub">À conserver</div><p class="small muted">'+p.keeps.map(function(x){return esc(x.t)}).join(" · ")+'</p>';
+    h+='<div class="sub">À conserver</div><p class="small muted">'+p.keeps.map(function(x){return esc(libelleTxt(x.t))}).join(" · ")+'</p>';
   }
   el.innerHTML=h;
 }
 function renderBoard(){
   var b=$("board");
   if(!S.ranked.length){b.innerHTML='<li class="empty">Aucune action avec la MM20 au-dessus de la MM200.</li>';return}
-  var top=S.ranked.slice(0,10),maxR=top[0].ratio-1;
+  var top=S.ranked.slice(0,50),maxR=top[0].ratio-1;
+  $("boardInfo").textContent="Les "+top.length+" meilleurs ratios parmi les "+S.ranked.length+" actions dont la MM20 est au-dessus de la MM200";
   b.innerHTML=top.map(function(r,i){
     var st=statusOf(r.t),w=Math.max(4,Math.min(100,(r.ratio-1)/maxR*100));
     var tag=st.k==="buy"?'<span class="tag buy">À acheter</span>':st.k==="sell"||st.l==="Conserver"?'<span class="tag held">Détenue</span>':'<span class="tag">En attente</span>';
     return '<li class="row" role="option" tabindex="0" data-t="'+esc(r.t)+'" aria-selected="'+(r.t.toUpperCase()===S.selected)+'">'+
-      '<span class="rank">'+(i+1)+'</span><div><div><span class="tick">'+esc(r.t)+'</span> <span class="name">'+esc(r.n)+'</span></div>'+
+      '<span class="rank">'+(i+1)+'</span><div><div>'+libelle(r.t)+'</div>'+
       '<div class="meter" aria-hidden="true"><span style="width:'+w+'%"></span></div>'+
       '<div class="ratio">MM20/MM200 '+fmt(r.ratio,3)+' · cours '+fmt(r.price)+' $'+(r.mom!=null?' · <span class="info">momentum '+pct(r.mom)+'</span>':'')+'</div></div>'+tag+'</li>';
   }).join("");
@@ -461,7 +466,7 @@ function renderDetail(){
   else if(st.k==="wait")why.push("En tendance haussière, mais "+(rank<0?"":"classée "+(rank+1)+"e : ")+"pas de place libre pour elle aujourd’hui.");
   else why.push("Sa MM20 est sous sa MM200 : la règle ne l’achète pas.");
   if(r.crossType)why.push("Dernier croisement "+r.crossType+" le "+new Date(r.crossDate+"T12:00:00").toLocaleDateString("fr-FR")+".");
-  el.innerHTML='<div class="panel-head"><div><h2>'+esc(r.t)+' <span class="muted small">'+esc(r.n)+(r.s?" · "+esc(r.s):"")+'</span></h2>'+
+  el.innerHTML='<div class="panel-head"><div><h2>'+esc(r.n&&r.n!==r.t?r.n:r.t)+' <span class="muted small">'+(r.n&&r.n!==r.t?"– "+esc(r.t):"")+(r.s?" · "+esc(r.s):"")+'</span></h2>'+
     '<div class="big">'+fmt(r.price)+' $</div><div class="small muted">'+(rank>=0?"Rang "+(rank+1)+" sur "+S.ranked.length+" actions en tendance":"Hors tendance")+'</div></div>'+
     '<span class="pill '+st.k+'">'+st.l+'</span></div>'+
     '<div class="kv"><div><span>MM20</span><b>'+fmt(r.ma20)+'</b></div><div><span>MM200</span><b>'+fmt(r.ma200)+'</b></div><div><span>Ratio</span><b>'+fmt(r.ratio,3)+'</b></div></div>'+
@@ -479,7 +484,7 @@ function renderPortfolio(){
   var rows=S.portfolio.map(function(p,i){
     var t=p.t.toUpperCase(),r=S.byTicker[t],st=S.data?statusOf(t):null,val=r?r.price*p.q:null,perf=r?r.price/p.price-1:null;
     if(r){tot+=val;cost+=p.price*p.q}
-    return'<tr><td><button class="linkbtn" style="color:var(--ink)" data-sel="'+esc(t)+'"><strong>'+esc(t)+'</strong></button></td>'+
+    return'<tr><td><button class="linkbtn" style="color:var(--ink);text-align:left" data-sel="'+esc(t)+'">'+libelle(t)+'</button></td>'+
       '<td class="num">'+fmt(p.q,p.q%1?2:0)+'</td><td class="num">'+fmt(p.price)+'</td><td class="num">'+(r?fmt(r.price):"–")+'</td>'+
       '<td class="num '+(perf>=0?"pos":"neg")+'">'+pct(perf)+'</td><td class="num">'+fmt(val)+'</td>'+
       '<td class="num">'+(r?fmt(r.ratio,3):"–")+'</td><td class="num info">'+(r?pct(r.mom):"–")+'</td>'+
@@ -496,7 +501,7 @@ function renderVentes(){
   var tot=0;
   var rows=S.ventes.slice().reverse().map(function(v,j){
     var i=S.ventes.length-1-j;tot+=v.res;
-    return'<tr><td>'+esc(v.d?new Date(v.d+"T12:00:00").toLocaleDateString("fr-FR"):"–")+'</td><td><strong>'+esc(v.t)+'</strong></td>'+
+    return'<tr><td>'+esc(v.d?new Date(v.d+"T12:00:00").toLocaleDateString("fr-FR"):"–")+'</td><td>'+libelle(v.t)+'</td>'+
       '<td class="num">'+fmt(v.q,v.q%1?2:0)+'</td><td class="num">'+fmt(v.pa)+'</td><td class="num">'+fmt(v.pv)+'</td>'+
       '<td class="num '+(v.res>=0?"pos":"neg")+'">'+(v.res>=0?"+":"")+fmt(v.res)+'</td><td class="num '+(v.res>=0?"pos":"neg")+'">'+pct(v.pv/v.pa-1)+'</td>'+
       '<td><button class="linkbtn" data-delv="'+i+'">Annuler la vente</button></td></tr>';
@@ -507,9 +512,9 @@ function renderVentes(){
 $("ventes").addEventListener("click",function(e){
   var d=e.target.closest("[data-delv]");if(!d)return;
   var i=+d.getAttribute("data-delv"),v=S.ventes[i];if(!v)return;
-  if(!confirm("Annuler la vente de "+fmt(v.q,v.q%1?2:0)+" "+v.t+" ? Les actions reviendront dans le portefeuille au prix d’achat d’origine."))return;
+  if(!confirm("Annuler la vente de "+fmt(v.q,v.q%1?2:0)+" "+libelleTxt(v.t)+" ? Les actions reviendront dans le portefeuille au prix d’achat d’origine."))return;
   var avant=snapshot();annulerVente(i);
-  toast("Vente annulée : "+v.t+" est de retour dans le portefeuille",function(){restore(avant)});
+  toast("Vente annulée : "+libelleTxt(v.t)+" est de retour dans le portefeuille",function(){restore(avant)});
 });
 function renderDatalist(){$("tickers").innerHTML=S.results.map(function(r){return'<option value="'+esc(r.t)+'">'+esc(r.n)+'</option>'}).join("")}
 function renderAll(){if(S.data)computePlan();renderStatus();renderOrders();renderBoard();renderDetail();renderPortfolio();renderVentes();renderDatalist();renderBadge()}
@@ -653,11 +658,11 @@ $("posForm").addEventListener("submit",function(e){
     var res=q*pr-cout;
     S.portfolio=garde;S.ventes.push({t:t,q:q,pa:cout/q,pv:pr,d:d,res:res,lots:lots});
     LS.set("mm.portfolio",S.portfolio);LS.set("mm.ventes",S.ventes);
-    toast("Vente enregistrée : "+t+", "+(res>=0?"+":"")+fmt(res)+" $",function(){restore(avant)});
+    toast("Vente enregistrée : "+libelleTxt(t)+", "+(res>=0?"+":"")+fmt(res)+" $",function(){restore(avant)});
   }else{
     var avantA=snapshot();
     S.portfolio.push({t:t,price:pr,q:q,d:d});LS.set("mm.portfolio",S.portfolio);
-    toast("Achat enregistré : "+fmt(q,q%1?2:0)+" "+t+" à "+fmt(pr)+" $",function(){restore(avantA)});
+    toast("Achat enregistré : "+fmt(q,q%1?2:0)+" "+libelleTxt(t)+" à "+fmt(pr)+" $",function(){restore(avantA)});
   }
   $("posForm").reset();setOp("achat",false);$("pHint").hidden=true;renderAll();
 });
@@ -666,9 +671,9 @@ $("portfolio").addEventListener("click",function(e){
   var d=e.target.closest("[data-del]"),s=e.target.closest("[data-sel]");
   if(d){
     var i=+d.getAttribute("data-del"),o=S.portfolio[i];if(!o)return;
-    if(!confirm("Annuler l’achat de "+fmt(o.q,o.q%1?2:0)+" "+o.t+" à "+fmt(o.price)+" $ ? La ligne sera retirée du portefeuille."))return;
+    if(!confirm("Annuler l’achat de "+fmt(o.q,o.q%1?2:0)+" "+libelleTxt(o.t)+" à "+fmt(o.price)+" $ ? La ligne sera retirée du portefeuille."))return;
     var avant=snapshot();S.portfolio.splice(i,1);LS.set("mm.portfolio",S.portfolio);renderAll();
-    toast("Achat annulé : "+o.t,function(){restore(avant)});
+    toast("Achat annulé : "+libelleTxt(o.t),function(){restore(avant)});
   }
   if(s)select(s.getAttribute("data-sel"));
 });
