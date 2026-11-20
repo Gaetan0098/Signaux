@@ -57,7 +57,17 @@ NOMS_FAMILLES = {"tendance": "Tendance MM20/MM200", "momentum": "Momentum 12 moi
                  "combine": "Tendance + momentum"}
 
 
+SPECIALES = [
+    dict(type="pur_actions"),   # MM20/MM200 pur sur les actions, sans stop
+    dict(type="pur_indice"),    # MM20/MM200 pur sur l'ETF S&P 500 (SPY), sans stop
+]
+
+
 def nom_config(c):
+    if c.get("type") == "pur_actions":
+        return "MM20/MM200 pur sur actions (sans stop)"
+    if c.get("type") == "pur_indice":
+        return "MM20/MM200 pur sur l’indice (SPY ou liquidités)"
     return (f"{NOMS_FAMILLES[c['famille']]} · chandeliers {'oui' if c['chandeliers'] else 'non'}"
             f" · filtre résultats {'oui' if c['resultats'] else 'non'} · stop {c['atr_k']}×ATR")
 
@@ -265,7 +275,8 @@ def preparer(D):
     }
     e_t = V & (ratio > 1) & (c > ma20) & (ecart <= P["surext"]) & (c > ma200)
     e_m = V & (mom > 0) & (c > ma200)
-    elig = {"tendance": e_t, "momentum": e_m, "combine": e_t & (mom > 0)}
+    elig = {"tendance": e_t, "momentum": e_m, "combine": e_t & (mom > 0), "pur": V & (ma20 > ma200)}
+    scores["pur"] = scores["tendance"]
 
     # publications de résultats dans les N prochaines séances
     proche = np.zeros((len(idx), len(tick)), bool)
@@ -308,13 +319,15 @@ def simuler(I, cfg, debut, fin):
     idx = I["index"]
     i0, i1 = idx.searchsorted(pd.Timestamp(debut)), idx.searchsorted(pd.Timestamp(fin), side="right")
     O, H, L, C, ATR = I["O"], I["H"], I["L"], I["C"], I["ATR"]
-    S, RK = I["score"][cfg["famille"]], I["rang"][cfg["famille"]]
-    E = I["elig"][cfg["famille"]].copy()
-    if cfg["chandeliers"]:
+    pur = cfg.get("type") == "pur_actions"
+    fam = "pur" if pur else cfg["famille"]
+    S, RK = I["score"][fam], I["rang"][fam]
+    E = I["elig"][fam].copy()
+    if not pur and cfg["chandeliers"]:
         E &= I["confirm"]
-    if cfg["resultats"]:
+    if not pur and cfg["resultats"]:
         E &= ~I["proche"]
-    k_atr = cfg["atr_k"]
+    k_atr = None if pur else cfg["atr_k"]
     st = dict(cash=P["capital"], frais=0.0)
     pos, trades, courbe, investi = {}, [], [], []
     a_vendre, a_acheter, bloque = {}, [], {}
@@ -351,8 +364,12 @@ def simuler(I, cfg, debut, fin):
             px = O[i, k]
             if not (np.isfinite(px) and px > 0):
                 continue
-            dist = k_atr * atr_ref
-            n = math.floor(min(P["risque_par_ligne"] * eq_veille / dist, P["poids_max"] * eq_veille / px))
+            if pur:   # sans stop : parts égales
+                dist = float("inf")
+                n = math.floor(eq_veille / P["max_lignes"] / px)
+            else:
+                dist = k_atr * atr_ref
+                n = math.floor(min(P["risque_par_ligne"] * eq_veille / dist, P["poids_max"] * eq_veille / px))
             n = min(n, math.floor((st["cash"] - P["frais_fixe"]) / (px * (1 + P["frais_change"] + P["glissement"]))))
             if n < 1:
                 continue
@@ -378,16 +395,16 @@ def simuler(I, cfg, debut, fin):
                 continue
             p["dernier"] = c_
             p["haut"] = max(p["haut"], c_)
-            if np.isfinite(ATR[i, k]):
+            if not pur and np.isfinite(ATR[i, k]):
                 p["stop"] = max(p["stop"], p["haut"] - k_atr * ATR[i, k])
             if I["MA20"][i, k] < I["MA200"][i, k]:
                 a_vendre[k] = "croisement baissier"
             elif not I["membres"][i, k]:
                 a_vendre[k] = "sortie de l’indice"
-            elif I["fin_semaine"][i] and not RK[i, k] <= P["rang_sortie"]:
+            elif not pur and I["fin_semaine"][i] and not RK[i, k] <= P["rang_sortie"]:
                 a_vendre[k] = "perte de rang"
         # 5. à la clôture : achats pour le lendemain
-        if I["marche_ok"][i] and i + 1 < i1:
+        if (pur or I["marche_ok"][i]) and i + 1 < i1:
             libres = P["max_lignes"] - (len(pos) - len(a_vendre))
             if libres > 0:
                 cand = [k for k in np.flatnonzero(E[i]) if k not in pos and bloque.get(k, -1) < i
@@ -402,6 +419,50 @@ def simuler(I, cfg, debut, fin):
     ouvertes = [dict(action=I["tick"][k], entree=str(idx[p["i"]].date()), prix_entree=round(p["px"], 2),
                      quantite=p["n"], stop=round(p["stop"], 2), dernier=round(p["dernier"], 2)) for k, p in pos.items()]
     return eq, trades, st["frais"], float(np.mean(investi)) if investi else 0.0, ouvertes
+
+
+def simuler_indice_mm(I, debut, fin):
+    """Détient SPY quand sa MM20 est au-dessus de sa MM200, liquidités sinon."""
+    idx = I["index"]
+    i0, i1 = idx.searchsorted(pd.Timestamp(debut)), idx.searchsorted(pd.Timestamp(fin), side="right")
+    c, o = I["spy"].values, I["spy_open"].values
+    m20 = I["spy"].rolling(20).mean().values
+    m200 = I["spy"].rolling(200).mean().values
+    taux = P["frais_change"] + P["glissement"]
+    cash, parts, frais, entree, courbe, investi, trades = P["capital"], 0.0, 0.0, None, [], [], []
+    ordre = "achat" if m20[i0 - 1] > m200[i0 - 1] else None   # position décidée la veille du début
+    for i in range(i0, i1):
+        if ordre == "achat" and parts == 0:
+            f_ = P["frais_fixe"] + (cash - P["frais_fixe"]) / (1 + taux) * taux
+            parts = (cash - f_) / o[i]
+            entree = (i, o[i], cash)
+            frais += f_
+            cash = 0.0
+        elif ordre == "vente" and parts > 0:
+            montant = parts * o[i]
+            f_ = P["frais_fixe"] + montant * taux
+            cash = montant - f_
+            frais += f_
+            trades.append(dict(action="SPY", entree=str(idx[entree[0]].date()), sortie=str(idx[i].date()),
+                               prix_entree=round(entree[1], 2), prix_sortie=round(o[i], 2), quantite=round(parts, 3),
+                               resultat=round(cash - entree[2], 2), resultat_pct=round(cash / entree[2] - 1, 4),
+                               jours=int(i - entree[0]), raison="croisement baissier"))
+            parts = 0.0
+        ordre = None
+        if i + 1 < i1:
+            if parts == 0 and m20[i] > m200[i]:
+                ordre = "achat"
+            elif parts > 0 and m20[i] < m200[i]:
+                ordre = "vente"
+        courbe.append(cash + parts * c[i])
+        investi.append(1.0 if parts > 0 else 0.0)
+    return pd.Series(courbe, index=idx[i0:i1]), trades, frais, float(np.mean(investi)), []
+
+
+def lancer(I, cfg, debut, fin):
+    if cfg.get("type") == "pur_indice":
+        return simuler_indice_mm(I, debut, fin)
+    return simuler(I, cfg, debut, fin)
 
 
 def indice(I, debut, fin):
@@ -520,6 +581,10 @@ def developpement(I, dossier, prefixe):
         eq, tr, fr, ex, _ = simuler(I, c, debut, fin)
         res.append(dict(config=c, nom=nom_config(c), mesures=mesures(eq, tr, fr, ex), courbe=eq, trades=tr))
         print(f"  [{n}/{len(configs)}] {nom_config(c)} : {res[-1]['mesures']['cagr'] * 100:.1f} %/an")
+    for c in SPECIALES:
+        eq, tr, fr, ex, _ = lancer(I, c, debut, fin)
+        res.append(dict(config=c, nom=nom_config(c), mesures=mesures(eq, tr, fr, ex), courbe=eq, trades=tr))
+        print(f"  [variante] {nom_config(c)} : {res[-1]['mesures']['cagr'] * 100:.1f} %/an")
     ref = mesures(indice(I, debut, fin))
     ref_eq = indice(I, debut, fin)
     res.sort(key=lambda r: -np.nan_to_num(r["mesures"]["sharpe"], nan=-9))
@@ -552,7 +617,7 @@ def validation(I, dossier, prefixe):
         sys.exit("Il manque backtest/config_retenue.json : choisissez d'abord une configuration après la mise au point.")
     with open(chemin, encoding="utf-8") as f:
         cfg = json.load(f)
-    cfg = {k: cfg[k] for k in GRILLE}
+    cfg = {"type": cfg["type"]} if cfg.get("type") in ("pur_actions", "pur_indice") else {k: cfg[k] for k in GRILLE}
     empreinte = hashlib.sha1(json.dumps([cfg, P], sort_keys=True).encode()).hexdigest()[:10]
     journal = os.path.join(dossier, f"{prefixe}journal_validation.json")
     deja = json.load(open(journal, encoding="utf-8")) if os.path.exists(journal) else []
@@ -563,7 +628,7 @@ def validation(I, dossier, prefixe):
     sortie = dict(config=cfg, nom=nom_config(cfg), empreinte=empreinte, parametres=P)
     graphs = []
     for titre, d, f_ in periodes:
-        eq, tr, fr, ex, ouv = simuler(I, cfg, d, f_)
+        eq, tr, fr, ex, ouv = lancer(I, cfg, d, f_)
         m, ref = mesures(eq, tr, fr, ex), mesures(indice(I, d, f_))
         sortie[titre] = dict(debut=d, fin=f_, mesures=m, reference=ref, trades=tr, positions_ouvertes=ouv)
         blocs.append(f'<h2>{titre} : {d[:4]} → {f_[:7]}</h2><div class="card wrap"><table>{ENTETE}'
