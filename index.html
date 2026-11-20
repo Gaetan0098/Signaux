@@ -124,7 +124,7 @@ footer{margin-top:32px;font-size:.82rem;color:var(--muted);max-width:75ch}
 .tag.buy{background:var(--buy-bg);color:var(--buy);border-color:transparent}
 .tag.held{background:var(--bg);color:var(--ink)}
 .info{color:var(--muted);font-size:.8rem}
-@media (max-width:520px){.order{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"pill qty" "txt txt";gap:8px}.order>.pill{grid-area:pill;justify-self:start}.order>.qty{grid-area:qty}.order>div:not(.qty){grid-area:txt}}
+@media (max-width:520px){.order{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"pill qty" "txt txt";gap:8px}.order>.pill{grid-area:pill;justify-self:start}.order>.qty{grid-area:qty}.order>.order-main{grid-area:txt}}
 .note{margin-top:12px;padding:10px 12px;border-radius:8px;background:var(--wait-bg);color:var(--wait);font-size:.85rem}
 
 /* onglets */
@@ -154,7 +154,14 @@ body[data-tab="portefeuille"] .layout .detail,body[data-tab="reglages"] .layout 
 button.pill{border:0;cursor:pointer;font:inherit;font-weight:800;font-size:.9rem;display:inline-flex;align-items:center;gap:6px}
 button.pill::after{content:"›";font-size:1.1em;line-height:1}
 button.pill:hover{filter:brightness(.96);box-shadow:inset 0 0 0 1px currentColor}
-.order-main{all:unset;cursor:pointer;min-width:0;display:block}
+.order-main{all:unset;box-sizing:border-box;cursor:pointer;min-width:0;max-width:100%;display:block;overflow-wrap:anywhere}
+.order{min-width:0;max-width:100%}
+.order .qty{min-width:0}
+.orders .tick,.board .tick{overflow-wrap:anywhere}
+.toast{position:fixed;left:12px;right:12px;margin:0 auto;max-width:480px;justify-content:space-between;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:40;display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:10px;background:var(--ink);color:var(--bg);font-weight:600;font-size:.9rem;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.toast[hidden]{display:none}
+.toast button{background:none;border:0;padding:4px 2px;color:var(--bg);text-decoration:underline;font-weight:800}
+@media (max-width:699px){.toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}}
 .order-main:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
 select{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
 .hint{font-size:.85rem;color:var(--wait);background:var(--wait-bg);border-radius:8px;padding:8px 12px;margin:0 0 12px}
@@ -275,6 +282,8 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
     </aside>
   </div>
 </div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastMsg"></span><button id="toastUndo">Annuler</button></div>
 
 <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-label="Détail de l’action">
   <div class="sheet-card">
@@ -475,7 +484,7 @@ function renderPortfolio(){
       '<td class="num '+(perf>=0?"pos":"neg")+'">'+pct(perf)+'</td><td class="num">'+fmt(val)+'</td>'+
       '<td class="num">'+(r?fmt(r.ratio,3):"–")+'</td><td class="num info">'+(r?pct(r.mom):"–")+'</td>'+
       '<td>'+(st?'<span class="pill '+st.k+'">'+st.l+'</span>':"–")+'</td>'+
-      '<td><button class="linkbtn" style="color:var(--ink);margin-right:12px" data-act="vente" data-t="'+esc(t)+'">Vendre</button><button class="linkbtn" data-del="'+i+'" aria-label="Supprimer '+esc(t)+' (erreur de saisie)">Supprimer</button></td></tr>';
+      '<td><button class="linkbtn" style="color:var(--ink);margin-right:12px" data-act="vente" data-t="'+esc(t)+'">Vendre</button><button class="linkbtn" data-del="'+i+'" aria-label="Annuler l’achat de '+esc(t)+'">Annuler l’achat</button></td></tr>';
   }).join("");
   var tp=cost?tot/cost-1:null;
   el.innerHTML='<table><thead><tr><th>Action</th><th class="num">Qté</th><th class="num">Prix d’achat ($)</th><th class="num">Cours ($)</th><th class="num">+/-</th><th class="num">Valeur ($)</th><th class="num">Ratio</th><th class="num">Momentum 12 m</th><th>Signal</th><th></th></tr></thead><tbody>'+rows+
@@ -490,15 +499,17 @@ function renderVentes(){
     return'<tr><td>'+esc(v.d?new Date(v.d+"T12:00:00").toLocaleDateString("fr-FR"):"–")+'</td><td><strong>'+esc(v.t)+'</strong></td>'+
       '<td class="num">'+fmt(v.q,v.q%1?2:0)+'</td><td class="num">'+fmt(v.pa)+'</td><td class="num">'+fmt(v.pv)+'</td>'+
       '<td class="num '+(v.res>=0?"pos":"neg")+'">'+(v.res>=0?"+":"")+fmt(v.res)+'</td><td class="num '+(v.res>=0?"pos":"neg")+'">'+pct(v.pv/v.pa-1)+'</td>'+
-      '<td><button class="linkbtn" data-delv="'+i+'">Supprimer</button></td></tr>';
+      '<td><button class="linkbtn" data-delv="'+i+'">Annuler la vente</button></td></tr>';
   }).join("");
   el.innerHTML='<table><thead><tr><th>Date</th><th>Action</th><th class="num">Qté</th><th class="num">Prix d’achat moyen ($)</th><th class="num">Prix de vente ($)</th><th class="num">Résultat ($)</th><th class="num">%</th><th></th></tr></thead><tbody>'+rows+
     '</tbody><tfoot><tr><td colspan="5"><strong>Total réalisé</strong> <span class="info">(hors frais)</span></td><td class="num '+(tot>=0?"pos":"neg")+'"><strong>'+(tot>=0?"+":"")+fmt(tot)+'</strong></td><td colspan="2"></td></tr></tfoot></table>';
 }
 $("ventes").addEventListener("click",function(e){
   var d=e.target.closest("[data-delv]");if(!d)return;
-  if(!confirm("Supprimer cette vente de l’historique ? Les actions ne seront pas remises dans le portefeuille."))return;
-  S.ventes.splice(+d.getAttribute("data-delv"),1);LS.set("mm.ventes",S.ventes);renderVentes();
+  var i=+d.getAttribute("data-delv"),v=S.ventes[i];if(!v)return;
+  if(!confirm("Annuler la vente de "+fmt(v.q,v.q%1?2:0)+" "+v.t+" ? Les actions reviendront dans le portefeuille au prix d’achat d’origine."))return;
+  var avant=snapshot();annulerVente(i);
+  toast("Vente annulée : "+v.t+" est de retour dans le portefeuille",function(){restore(avant)});
 });
 function renderDatalist(){$("tickers").innerHTML=S.results.map(function(r){return'<option value="'+esc(r.t)+'">'+esc(r.n)+'</option>'}).join("")}
 function renderAll(){if(S.data)computePlan();renderStatus();renderOrders();renderBoard();renderDetail();renderPortfolio();renderVentes();renderDatalist();renderBadge()}
@@ -577,6 +588,27 @@ $("orders").addEventListener("click",function(e){
   prefill(a.getAttribute("data-act"),a.getAttribute("data-t"));
 })});
 
+/* ---------- annulation ---------- */
+var toastTimer,undoFn=null;
+function snapshot(){return JSON.stringify({p:S.portfolio,v:S.ventes})}
+function restore(snap){var o=JSON.parse(snap);S.portfolio=o.p;S.ventes=o.v;LS.set("mm.portfolio",S.portfolio);LS.set("mm.ventes",S.ventes);renderAll()}
+function toast(msg,fn){
+  clearTimeout(toastTimer);undoFn=fn||null;
+  $("toastMsg").textContent=msg;$("toastUndo").hidden=!fn;$("toast").hidden=false;
+  toastTimer=setTimeout(function(){$("toast").hidden=true;undoFn=null},8000);
+}
+$("toastUndo").onclick=function(){if(undoFn){var f=undoFn;undoFn=null;f()}$("toast").hidden=true;toast("Opération annulée.")};
+function annulerVente(i){
+  var v=S.ventes[i];if(!v)return;
+  var lots=v.lots||[{t:v.t,price:v.pa,q:v.q,d:null}];
+  lots.forEach(function(l){
+    var m=S.portfolio.filter(function(o){return o.t.toUpperCase()===l.t.toUpperCase()&&o.price===l.price&&(o.d||null)===(l.d||null)})[0];
+    if(m)m.q+=l.q;else S.portfolio.push({t:l.t,price:l.price,q:l.q,d:l.d||null});
+  });
+  S.portfolio.sort(function(a,b){return (a.d||"9999")<(b.d||"9999")?-1:(a.d||"9999")>(b.d||"9999")?1:0});   /* garde l’ordre d’achat */
+  S.ventes.splice(i,1);LS.set("mm.portfolio",S.portfolio);LS.set("mm.ventes",S.ventes);renderAll();
+}
+
 /* ---------- formulaire pré-rempli ---------- */
 function heldQty(t){return S.portfolio.filter(function(o){return o.t.toUpperCase()===t}).reduce(function(a,o){return a+o.q},0)}
 function today(){var d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
@@ -612,26 +644,32 @@ $("posForm").addEventListener("submit",function(e){
     var dispo=heldQty(t);
     if(dispo<=0){showBanner("Vous ne détenez pas "+t+" dans le portefeuille.",false,true);return}
     if(q>dispo+1e-9){showBanner("Vous ne détenez que "+fmt(dispo,dispo%1?2:0)+" "+t+".",false,true);return}
-    var reste=q,cout=0,garde=[];
+    var avant=snapshot(),reste=q,cout=0,garde=[],lots=[];
     S.portfolio.forEach(function(o){   /* premier acheté, premier vendu */
       if(o.t.toUpperCase()!==t||reste<=1e-9){garde.push(o);return}
-      var pris=Math.min(o.q,reste);cout+=pris*o.price;reste-=pris;
+      var pris=Math.min(o.q,reste);cout+=pris*o.price;reste-=pris;lots.push({t:o.t,price:o.price,q:pris,d:o.d||null});
       if(o.q-pris>1e-9)garde.push(Object.assign({},o,{q:o.q-pris}));
     });
     var res=q*pr-cout;
-    S.portfolio=garde;S.ventes.push({t:t,q:q,pa:cout/q,pv:pr,d:d,res:res});
+    S.portfolio=garde;S.ventes.push({t:t,q:q,pa:cout/q,pv:pr,d:d,res:res,lots:lots});
     LS.set("mm.portfolio",S.portfolio);LS.set("mm.ventes",S.ventes);
-    showBanner("Vente enregistrée : "+t+", résultat "+(res>=0?"+":"")+fmt(res)+" $.",true);
+    toast("Vente enregistrée : "+t+", "+(res>=0?"+":"")+fmt(res)+" $",function(){restore(avant)});
   }else{
+    var avantA=snapshot();
     S.portfolio.push({t:t,price:pr,q:q,d:d});LS.set("mm.portfolio",S.portfolio);
-    showBanner("Achat enregistré : "+fmt(q,q%1?2:0)+" "+t+" à "+fmt(pr)+" $.",true);
+    toast("Achat enregistré : "+fmt(q,q%1?2:0)+" "+t+" à "+fmt(pr)+" $",function(){restore(avantA)});
   }
   $("posForm").reset();setOp("achat",false);$("pHint").hidden=true;renderAll();
 });
 $("portfolio").addEventListener("click",function(e){
   var a=e.target.closest("[data-act]");if(a){prefill(a.getAttribute("data-act"),a.getAttribute("data-t"));return}
   var d=e.target.closest("[data-del]"),s=e.target.closest("[data-sel]");
-  if(d){S.portfolio.splice(+d.getAttribute("data-del"),1);LS.set("mm.portfolio",S.portfolio);renderAll()}
+  if(d){
+    var i=+d.getAttribute("data-del"),o=S.portfolio[i];if(!o)return;
+    if(!confirm("Annuler l’achat de "+fmt(o.q,o.q%1?2:0)+" "+o.t+" à "+fmt(o.price)+" $ ? La ligne sera retirée du portefeuille."))return;
+    var avant=snapshot();S.portfolio.splice(i,1);LS.set("mm.portfolio",S.portfolio);renderAll();
+    toast("Achat annulé : "+o.t,function(){restore(avant)});
+  }
   if(s)select(s.getAttribute("data-sel"));
 });
 [["sCapital","capital"],["sLignes","lignes"],["sFx","fx"]].forEach(function(p){
