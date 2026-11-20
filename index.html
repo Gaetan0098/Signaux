@@ -126,6 +126,40 @@ footer{margin-top:32px;font-size:.82rem;color:var(--muted);max-width:75ch}
 .info{color:var(--muted);font-size:.8rem}
 @media (max-width:520px){.order{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"pill qty" "txt txt";gap:8px}.order>.pill{grid-area:pill;justify-self:start}.order>.qty{grid-area:qty}.order>div:not(.qty){grid-area:txt}}
 .note{margin-top:12px;padding:10px 12px;border-radius:8px;background:var(--wait-bg);color:var(--wait);font-size:.85rem}
+
+/* onglets */
+.tabs{display:flex;gap:2px;margin:16px 0 0;border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+.tab{display:flex;align-items:center;gap:8px;background:none;border:0;border-bottom:3px solid transparent;border-radius:0;padding:12px 14px;color:var(--muted);font-weight:700}
+.tab svg{width:18px;height:18px;flex:none}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tab:hover{color:var(--ink);border-color:transparent;border-bottom-color:var(--line)}
+.tab[aria-selected="true"]:hover{border-bottom-color:var(--ink)}
+.badge{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--sell);color:#fff;font-size:.72rem;line-height:18px;text-align:center}
+.tabpanel{margin-top:20px}
+.layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:start}
+.layout .detail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px)}
+@media (max-width:899px){.layout{grid-template-columns:minmax(0,1fr)}.layout .detail{display:none}}
+@media (max-width:699px){
+  .tabs{position:fixed;left:0;right:0;bottom:0;top:auto;margin:0;border-bottom:0;border-top:1px solid var(--line);background:var(--surface);padding-bottom:env(safe-area-inset-bottom,0px);justify-content:space-around}
+  .tab{flex:1;flex-direction:column;gap:3px;padding:8px 2px 6px;font-size:.72rem;border-bottom:0;border-top:3px solid transparent;position:relative}
+  .tab[aria-selected="true"]{border-top-color:var(--ink)}
+  .tab:hover,.tab[aria-selected="true"]:hover{border-bottom:0}
+  .tab .badge{position:absolute;top:4px;left:calc(50% + 6px)}
+  .tab svg{width:22px;height:22px}
+  .wrap{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .tabpanel{margin-top:16px}
+}
+body[data-tab="portefeuille"] .layout,body[data-tab="reglages"] .layout{grid-template-columns:minmax(0,1fr)}
+body[data-tab="portefeuille"] .layout .detail,body[data-tab="reglages"] .layout .detail{display:none}
+/* fiche détail (mobile) */
+.sheet{position:fixed;inset:0;z-index:30;background:rgba(10,18,30,.45);display:flex;align-items:flex-end}
+.sheet[hidden]{display:none}
+.sheet-card{background:var(--surface);color:var(--ink);width:100%;max-height:88vh;overflow:auto;border-radius:16px 16px 0 0;padding:12px 16px calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet-close{display:block;margin:0 0 8px auto}
+body.noscroll{overflow:hidden}
+textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-height:80px;resize:vertical}
+.backup{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.backup .row2{display:flex;gap:8px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -141,55 +175,97 @@ footer{margin-top:32px;font-size:.82rem;color:var(--muted);max-width:75ch}
   </header>
   <div id="banner"></div>
 
-  <div class="grid">
-    <div class="panel">
-      <div class="panel-head">
-        <h2>Ordres pour la prochaine séance</h2>
-        <span class="muted small" id="slots"></span>
-      </div>
-      <div id="orders" class="orders"></div>
-      <div class="sub">Classement MM20/MM200</div>
-      <ol class="board" id="board" role="listbox" aria-label="Classement par ratio MM20/MM200"></ol>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" data-tab="ordres" aria-controls="tab-ordres"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg><span>Ordres</span><span class="badge" id="badge" hidden></span></button>
+    <button class="tab" role="tab" data-tab="classement" aria-controls="tab-classement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 20V12M12 20V5M19 20v-5"/></svg><span>Classement</span></button>
+    <button class="tab" role="tab" data-tab="portefeuille" aria-controls="tab-portefeuille"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12h18"/></svg><span>Portefeuille</span></button>
+    <button class="tab" role="tab" data-tab="reglages" aria-controls="tab-reglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span>Réglages</span></button>
+  </nav>
+
+  <div class="layout">
+    <div>
+      <section class="tabpanel" id="tab-ordres" role="tabpanel" aria-label="Ordres">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Ordres pour la prochaine séance</h2>
+            <span class="muted small" id="slots"></span>
+          </div>
+          <div id="orders" class="orders"></div>
+        </div>
+      </section>
+
+      <section class="tabpanel" id="tab-classement" role="tabpanel" aria-label="Classement" hidden>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Classement MM20/MM200</h2>
+            <span class="muted small">Actions dont la MM20 est au-dessus de la MM200</span>
+          </div>
+          <ol class="board" id="board" role="listbox" aria-label="Classement par ratio MM20/MM200"></ol>
+        </div>
+      </section>
+
+      <section class="tabpanel" id="tab-portefeuille" role="tabpanel" aria-label="Portefeuille" hidden>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Mon portefeuille</h2>
+            <span class="muted small">Ajoutez chaque achat réalisé : l’appli en déduit les ventes et les places libres.</span>
+          </div>
+          <form class="form" id="posForm" autocomplete="off">
+            <label>Action<input id="pTicker" list="tickers" required placeholder="ex. NVDA"></label>
+            <label>Prix d’achat ($)<input id="pPrice" type="number" step="0.01" min="0" required></label>
+            <label>Quantité<input id="pQty" type="number" step="any" min="0" required></label>
+            <label>Date d’achat<input id="pDate" type="date"></label>
+            <button class="primary" type="submit">Ajouter la ligne</button>
+            <datalist id="tickers"></datalist>
+          </form>
+          <div class="tablewrap" id="portfolio"></div>
+        </div>
+      </section>
+
+      <section class="tabpanel" id="tab-reglages" role="tabpanel" aria-label="Réglages" hidden>
+        <div class="panel">
+          <div class="panel-head"><h2>Réglages</h2></div>
+          <div class="settings">
+            <label>Capital du portefeuille (€)<input type="number" id="sCapital" step="100" min="0"></label>
+            <label>Nombre de lignes<input type="number" id="sLignes" step="1" min="1"></label>
+            <label>Taux EUR/USD (1 € = … $)<input type="number" id="sFx" step="0.01" min="0.5"></label>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:16px">
+          <div class="panel-head"><h2>Sauvegarde</h2></div>
+          <p class="small muted">Votre portefeuille et vos réglages sont enregistrés uniquement sur cet appareil. Pour les garder en cas de changement de téléphone, ou les transférer, copiez une sauvegarde et gardez-la dans une note.</p>
+          <div class="backup">
+            <div class="row2"><button id="btnExport">Copier ma sauvegarde</button></div>
+            <label>Restaurer une sauvegarde<textarea id="backupText" placeholder="Collez ici le texte de la sauvegarde"></textarea></label>
+            <div class="row2"><button id="btnImport">Restaurer</button></div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:16px">
+          <div class="panel-head"><h2>La règle</h2></div>
+          <div class="rules" style="margin-top:0">
+            <p><strong>La règle :</strong> parmi les actions du S&amp;P 500 dont la MM20 est au-dessus de la MM200, on achète celles qui ont le ratio MM20/MM200 le plus élevé, à parts égales, tant qu’il reste des places. On garde chaque action jusqu’à ce que sa MM20 repasse sous sa MM200 (ou qu’elle quitte l’indice), puis on la vend. Pas de stop, pas d’autre règle.</p>
+            <p><strong>Quand agir :</strong> les signaux sont calculés sur les cours de clôture ; les ordres se passent à l’ouverture de la séance suivante, comme dans le backtest.</p>
+            <p><strong>Momentum 12 mois :</strong> affiché pour information (hausse sur 12 mois, hors dernier mois). Il n’entre pas dans les signaux : son utilité n’a pas été démontrée par le test.</p>
+            <p class="note">Ce que le backtest a montré : en 2021-2024, +23,6 %/an contre +13,9 % pour l’indice, avec une pire chute de −28 %. En validation 2025-2026, +18,3 %/an contre +10,3 %, mais une chute de −47 % à un moment donné. Le rendement supplémentaire se paie par un risque nettement plus élevé. En dessous de 10 lignes, le risque augmente fortement.</p>
+          </div>
+        </div>
+        <footer>
+          Outil d’aide à la décision fondé uniquement sur des moyennes mobiles ; il ne tient compte ni des résultats des entreprises, ni de l’actualité. Ce n’est pas un conseil en investissement. Les cours sont mis à jour automatiquement chaque soir de bourse.
+        </footer>
+      </section>
     </div>
-    <div class="panel detail" id="detail" aria-live="polite">
-      <p class="empty">Appuyez sur « Mise à jour » : les ordres et le classement s’affichent ici.</p>
-    </div>
+
+    <aside class="panel detail" id="detail" aria-live="polite">
+      <p class="empty">Touchez une action pour voir son graphique et l’explication du signal.</p>
+    </aside>
   </div>
+</div>
 
-  <section class="block panel">
-    <div class="panel-head">
-      <h2>Mon portefeuille</h2>
-      <span class="muted small">Ajoutez chaque achat réalisé : l’appli en déduit les ventes et les places libres.</span>
-    </div>
-    <form class="form" id="posForm" autocomplete="off">
-      <label>Action<input id="pTicker" list="tickers" required placeholder="ex. NVDA"></label>
-      <label>Prix d’achat ($)<input id="pPrice" type="number" step="0.01" min="0" required></label>
-      <label>Quantité<input id="pQty" type="number" step="any" min="0" required></label>
-      <label>Date d’achat<input id="pDate" type="date"></label>
-      <button class="primary" type="submit">Ajouter la ligne</button>
-      <datalist id="tickers"></datalist>
-    </form>
-    <div class="tablewrap" id="portfolio"></div>
-  </section>
-
-  <section class="block panel">
-    <div class="panel-head"><h2>Réglages</h2></div>
-    <div class="settings">
-      <label>Capital du portefeuille (€)<input type="number" id="sCapital" step="100" min="0"></label>
-      <label>Nombre de lignes<input type="number" id="sLignes" step="1" min="1"></label>
-      <label>Taux EUR/USD (1 € = … $)<input type="number" id="sFx" step="0.01" min="0.5"></label>
-    </div>
-    <div class="rules">
-      <p><strong>La règle :</strong> parmi les actions du S&P 500 dont la MM20 est au-dessus de la MM200, on achète celles qui ont le ratio MM20/MM200 le plus élevé, à parts égales, tant qu’il reste des places. On garde chaque action jusqu’à ce que sa MM20 repasse sous sa MM200 (ou qu’elle quitte l’indice), puis on la vend. Pas de stop, pas d’autre règle.</p>
-      <p><strong>Quand agir :</strong> les signaux sont calculés sur les cours de clôture ; les ordres se passent à l’ouverture de la séance suivante, comme dans le backtest.</p>
-      <p><strong>Momentum 12 mois :</strong> affiché pour information (hausse sur 12 mois, hors dernier mois). Il n’entre pas dans les signaux : son utilité n’a pas été démontrée par le test.</p>
-      <p class="note">Ce que le backtest a montré : en 2021-2024, +23,6 %/an contre +13,9 % pour l’indice, avec une pire chute de −28 %. En validation 2025-2026, +18,3 %/an contre +10,3 %, mais une chute de −47 % à un moment donné. Le rendement supplémentaire se paie par un risque nettement plus élevé. En dessous de 10 lignes, le risque augmente fortement.</p>
-    </div>
-  </section>
-
-  <footer>
-    Outil d’aide à la décision fondé uniquement sur des moyennes mobiles ; il ne tient compte ni des résultats des entreprises, ni de l’actualité. Ce n’est pas un conseil en investissement. Les cours sont mis à jour automatiquement chaque soir de bourse ; votre portefeuille et vos réglages restent uniquement sur cet appareil.
-  </footer>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-label="Détail de l’action">
+  <div class="sheet-card">
+    <button class="sheet-close" id="sheetClose">Fermer</button>
+    <div class="detail" id="sheetBody"></div>
+  </div>
 </div>
 
 <script>
@@ -348,7 +424,7 @@ function chartSVG(r){
   return'<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Cours, MM20 et MM200 de '+esc(r.t)+' sur '+N+' séances">'+g+line(B,"var(--mm200)",2)+line(A,"var(--mm20)",2)+line(P,"var(--price)",1.4)+mk+'</svg>';
 }
 function renderDetail(){
-  var el=$("detail"),t=S.selected,r=S.byTicker[t];
+  var el={set innerHTML(h){$("detail").innerHTML=h;$("sheetBody").innerHTML=h}},t=S.selected,r=S.byTicker[t];
   if(!r){
     el.innerHTML=t&&S.plan&&S.plan.held[t]?'<h2>'+esc(t)+'</h2><p class="empty">Cette action n’est plus dans le S&P 500 : la règle la vend.</p>':'<p class="empty">Appuyez sur « Mise à jour » : les ordres et le classement s’affichent ici.</p>';
     return;
@@ -388,11 +464,66 @@ function renderPortfolio(){
     '</tbody><tfoot><tr><td colspan="4"><strong>Total</strong></td><td class="num '+(tp>=0?"pos":"neg")+'">'+pct(tp)+'</td><td class="num"><strong>'+fmt(tot)+'</strong></td><td colspan="4"></td></tr></tfoot></table>';
 }
 function renderDatalist(){$("tickers").innerHTML=S.results.map(function(r){return'<option value="'+esc(r.t)+'">'+esc(r.n)+'</option>'}).join("")}
-function renderAll(){if(S.data)computePlan();renderStatus();renderOrders();renderBoard();renderDetail();renderPortfolio();renderDatalist()}
+function renderAll(){if(S.data)computePlan();renderStatus();renderOrders();renderBoard();renderDetail();renderPortfolio();renderDatalist();renderBadge()}
 
 /* ---------- événements ---------- */
 $("btnUpdate").onclick=function(){update(false)};
-function select(t){if(!t)return;S.selected=t.toUpperCase();renderBoard();renderDetail();if(window.matchMedia("(max-width:900px)").matches)$("detail").scrollIntoView({behavior:"smooth",block:"start"})}
+var desktop=window.matchMedia("(min-width:900px)");
+function select(t){if(!t)return;S.selected=t.toUpperCase();renderBoard();renderDetail();if(!desktop.matches)openSheet()}
+var lastFocus=null;
+function openSheet(){lastFocus=document.activeElement;$("sheet").hidden=false;document.body.classList.add("noscroll");$("sheetClose").focus()}
+function closeSheet(){$("sheet").hidden=true;document.body.classList.remove("noscroll");if(lastFocus&&lastFocus.focus)lastFocus.focus()}
+$("sheetClose").onclick=closeSheet;
+$("sheet").addEventListener("click",function(e){if(e.target===$("sheet"))closeSheet()});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!$("sheet").hidden)closeSheet()});
+desktop.addEventListener&&desktop.addEventListener("change",function(){if(desktop.matches&&!$("sheet").hidden)closeSheet()});
+
+/* ---------- onglets ---------- */
+var TABS=["ordres","classement","portefeuille","reglages"];
+function showTab(name,focus){
+  if(TABS.indexOf(name)<0)name="ordres";
+  TABS.forEach(function(t){
+    var on=t===name;$("tab-"+t).hidden=!on;
+    var b=document.querySelector('.tab[data-tab="'+t+'"]');b.setAttribute("aria-selected",on);b.tabIndex=on?0:-1;
+    if(on&&focus)b.focus();
+  });
+  document.body.dataset.tab=name;
+  LS.set("mm.tab",name);
+  if(location.hash!=="#"+name)history.replaceState(null,"","#"+name);
+  window.scrollTo(0,0);
+}
+document.querySelectorAll(".tab").forEach(function(b){
+  b.addEventListener("click",function(){showTab(b.dataset.tab)});
+  b.addEventListener("keydown",function(e){
+    var i=TABS.indexOf(b.dataset.tab);
+    if(e.key==="ArrowRight"||e.key==="ArrowLeft"){e.preventDefault();showTab(TABS[(i+(e.key==="ArrowRight"?1:TABS.length-1))%TABS.length],true)}
+  });
+});
+window.addEventListener("hashchange",function(){showTab(location.hash.slice(1))});
+function renderBadge(){
+  var p=S.plan,n=p?p.sells.length+p.buys.length:0,bd=$("badge");
+  bd.hidden=!n;bd.textContent=n;
+}
+
+/* ---------- sauvegarde ---------- */
+$("btnExport").onclick=function(){
+  var txt=JSON.stringify({v:1,portfolio:S.portfolio,settings:S.settings});
+  var done=function(){showBanner("Sauvegarde copiée. Collez-la dans une note ou un e-mail pour la garder.",true)};
+  var fallback=function(){var ta=$("backupText");ta.value=txt;ta.focus();ta.select();showBanner("Copiez le texte sélectionné dans le cadre ci-dessous.",true)};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,fallback)}else fallback();
+};
+$("btnImport").onclick=function(){
+  try{
+    var o=JSON.parse($("backupText").value.trim());
+    if(!o||!Array.isArray(o.portfolio))throw 0;
+    var ok=o.portfolio.every(function(p){return p&&typeof p.t==="string"&&p.price>0&&p.q>0});
+    if(!ok)throw 0;
+    if(S.portfolio.length&&!confirm("Remplacer votre portefeuille actuel ("+S.portfolio.length+" lignes) par la sauvegarde ?"))return;
+    S.portfolio=o.portfolio;LS.set("mm.portfolio",S.portfolio);
+    if(o.settings){S.settings=Object.assign({},DEFAULTS,o.settings);LS.set("mm.pur.settings",S.settings);["capital","lignes","fx"].forEach(function(k){$({capital:"sCapital",lignes:"sLignes",fx:"sFx"}[k]).value=S.settings[k]})}
+    $("backupText").value="";renderAll();showBanner("Sauvegarde restaurée : "+S.portfolio.length+" lignes.",true);
+  }catch(e){showBanner("Ce texte n’est pas une sauvegarde valide de l’appli.",false,true)}
+};
 function bindList(id,sel){
   $(id).addEventListener("click",function(e){var n=e.target.closest(sel);if(n)select(n.getAttribute("data-t"))});
   $(id).addEventListener("keydown",function(e){var n=e.target.closest(sel);if(n&&(e.key==="Enter"||e.key===" ")){e.preventDefault();select(n.getAttribute("data-t"))}});
@@ -421,6 +552,7 @@ $("portfolio").addEventListener("click",function(e){
 });
 
 /* ---------- démarrage ---------- */
+showTab(location.hash.slice(1)||LS.get("mm.tab","ordres"));
 var saved=LS.get("mm.data",null);S.checkedAt=LS.get("mm.checked",null);
 if(saved){try{ingest(saved)}catch(e){LS.del("mm.data");renderAll()}}else{renderAll()}
 update(true);
