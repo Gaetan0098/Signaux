@@ -1,0 +1,1204 @@
+{
+ "configs": [
+  {
+   "type": "pur_actions"
+  },
+  {
+   "type": "pur_indice"
+  }
+ ],
+ "noms": [
+  "MM20/MM200 pur sur actions (sans stop)",
+  "MM20/MM200 pur sur l’indice (SPY ou liquidités)"
+ ],
+ "empreinte": "b7cdff8ed4",
+ "parametres": {
+  "capital": 10000.0,
+  "max_lignes": 10,
+  "risque_par_ligne": 0.01,
+  "poids_max": 0.2,
+  "frais_fixe": 1.0,
+  "frais_change": 0.0025,
+  "glissement": 0.0005,
+  "surext": 0.08,
+  "rang_sortie": 100,
+  "jours_avant_resultats": 5,
+  "attente_apres_stop": 20
+ },
+ "Mise au point": {
+  "debut": "2021-01-01",
+  "fin": "2024-12-31",
+  "reference": {
+   "final": 16483.32,
+   "total": 0.6483324146866523,
+   "cagr": 0.1393473948833308,
+   "chute_max": -0.24496382047506826,
+   "sharpe": 0.8753327831732566,
+   "calmar": 0.568848879859437,
+   "annees": {
+    "2021": 0.27840758073694993,
+    "2022": -0.18175367665431486,
+    "2023": 0.26175790333652516,
+    "2024": 0.24886462945796883
+   }
+  },
+  "regles": {
+   "MM20/MM200 pur sur actions (sans stop)": {
+    "mesures": {
+     "final": 23307.19,
+     "total": 1.3307193848377206,
+     "cagr": 0.23630242412345348,
+     "chute_max": -0.28258603654896386,
+     "sharpe": 0.8923766625773629,
+     "calmar": 0.8362140854844016,
+     "annees": {
+      "2021": 0.23001743003929476,
+      "2022": -0.03220129432725005,
+      "2023": 0.20972097727971994,
+      "2024": 0.6184842369188532
+     },
+     "trades": 43,
+     "reussite": 0.4883720930232558,
+     "gain_moyen": 249.94428571428574,
+     "perte_moyenne": -175.26545454545456,
+     "duree_moyenne": 173.0,
+     "frais": 388.49,
+     "exposition": 0.974496067229738
+    },
+    "trades": [
+     {
+      "action": "ETSY",
+      "entree": "2021-01-05",
+      "sortie": "2021-05-28",
+      "prix_entree": 170.19,
+      "prix_sortie": 166.1,
+      "quantite": 5,
+      "resultat": -27.49,
+      "resultat_pct": -0.0322,
+      "jours": 100,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "TSLA",
+      "entree": "2021-01-05",
+      "sortie": "2021-06-07",
+      "prix_entree": 241.22,
+      "prix_sortie": 197.28,
+      "quantite": 4,
+      "resultat": -183.04,
+      "resultat_pct": -0.1889,
+      "jours": 105,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "TPR",
+      "entree": "2021-01-05",
+      "sortie": "2021-09-24",
+      "prix_entree": 28.34,
+      "prix_sortie": 34.86,
+      "quantite": 35,
+      "resultat": 219.4,
+      "resultat_pct": 0.2203,
+      "jours": 182,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "FCX",
+      "entree": "2021-01-05",
+      "sortie": "2021-09-27",
+      "prix_entree": 25.17,
+      "prix_sortie": 30.06,
+      "quantite": 39,
+      "resultat": 182.48,
+      "resultat_pct": 0.1852,
+      "jours": 183,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "HWM",
+      "entree": "2021-01-05",
+      "sortie": "2021-10-26",
+      "prix_entree": 26.55,
+      "prix_sortie": 29.79,
+      "quantite": 37,
+      "resultat": 111.56,
+      "resultat_pct": 0.1131,
+      "jours": 204,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "IVZ",
+      "entree": "2021-01-05",
+      "sortie": "2021-10-26",
+      "prix_entree": 13.42,
+      "prix_sortie": 20.04,
+      "quantite": 74,
+      "resultat": 480.44,
+      "resultat_pct": 0.4819,
+      "jours": 204,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "PVH",
+      "entree": "2021-01-05",
+      "sortie": "2021-12-16",
+      "prix_entree": 94.48,
+      "prix_sortie": 97.82,
+      "quantite": 10,
+      "resultat": 25.64,
+      "resultat_pct": 0.027,
+      "jours": 240,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "MGM",
+      "entree": "2021-01-05",
+      "sortie": "2021-12-17",
+      "prix_entree": 29.5,
+      "prix_sortie": 40.72,
+      "quantite": 33,
+      "resultat": 361.13,
+      "resultat_pct": 0.3695,
+      "jours": 241,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "MRNA",
+      "entree": "2021-09-24",
+      "sortie": "2021-12-31",
+      "prix_entree": 448.08,
+      "prix_sortie": 249.88,
+      "quantite": 2,
+      "resultat": -402.59,
+      "resultat_pct": -0.4474,
+      "jours": 68,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "ALGN",
+      "entree": "2021-01-05",
+      "sortie": "2022-01-07",
+      "prix_entree": 526.97,
+      "prix_sortie": 567.13,
+      "quantite": 1,
+      "resultat": 34.88,
+      "resultat_pct": 0.0659,
+      "jours": 255,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "IT",
+      "entree": "2021-10-26",
+      "sortie": "2022-02-15",
+      "prix_entree": 323.51,
+      "prix_sortie": 292.88,
+      "quantite": 3,
+      "resultat": -99.44,
+      "resultat_pct": -0.102,
+      "jours": 77,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "ALB",
+      "entree": "2021-01-05",
+      "sortie": "2022-02-25",
+      "prix_entree": 142.69,
+      "prix_sortie": 173.75,
+      "quantite": 7,
+      "resultat": 208.76,
+      "resultat_pct": 0.2082,
+      "jours": 288,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "AMD",
+      "entree": "2021-12-17",
+      "sortie": "2022-03-11",
+      "prix_entree": 136.3,
+      "prix_sortie": 108.13,
+      "quantite": 8,
+      "resultat": -233.23,
+      "resultat_pct": -0.2131,
+      "jours": 57,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "NVDA",
+      "entree": "2021-12-16",
+      "sortie": "2022-03-15",
+      "prix_entree": 31.02,
+      "prix_sortie": 21.43,
+      "quantite": 38,
+      "resultat": -372.37,
+      "resultat_pct": -0.3147,
+      "jours": 60,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "F",
+      "entree": "2022-01-07",
+      "sortie": "2022-03-25",
+      "prix_entree": 17.96,
+      "prix_sortie": 12.25,
+      "quantite": 31,
+      "resultat": -181.88,
+      "resultat_pct": -0.325,
+      "jours": 53,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "FTNT",
+      "entree": "2021-09-27",
+      "sortie": "2022-05-09",
+      "prix_entree": 61.69,
+      "prix_sortie": 51.95,
+      "quantite": 19,
+      "resultat": -193.54,
+      "resultat_pct": -0.1645,
+      "jours": 155,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "ANET",
+      "entree": "2021-12-31",
+      "sortie": "2022-05-16",
+      "prix_entree": 36.0,
+      "prix_sortie": 26.92,
+      "quantite": 33,
+      "resultat": -307.87,
+      "resultat_pct": -0.2582,
+      "jours": 93,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "NUE",
+      "entree": "2021-05-28",
+      "sortie": "2022-06-29",
+      "prix_entree": 92.97,
+      "prix_sortie": 101.98,
+      "quantite": 13,
+      "resultat": 107.51,
+      "resultat_pct": 0.0886,
+      "jours": 273,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "MOS",
+      "entree": "2022-03-25",
+      "sortie": "2022-07-12",
+      "prix_entree": 60.94,
+      "prix_sortie": 39.08,
+      "quantite": 7,
+      "resultat": -157.13,
+      "resultat_pct": -0.3664,
+      "jours": 73,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "FANG",
+      "entree": "2021-10-26",
+      "sortie": "2022-07-15",
+      "prix_entree": 88.82,
+      "prix_sortie": 90.55,
+      "quantite": 14,
+      "resultat": 14.8,
+      "resultat_pct": 0.0119,
+      "jours": 180,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "HAL",
+      "entree": "2022-02-25",
+      "sortie": "2022-07-18",
+      "prix_entree": 28.52,
+      "prix_sortie": 26.2,
+      "quantite": 40,
+      "resultat": -101.39,
+      "resultat_pct": -0.0885,
+      "jours": 97,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "APA",
+      "entree": "2022-02-15",
+      "sortie": "2022-07-22",
+      "prix_entree": 26.72,
+      "prix_sortie": 28.81,
+      "quantite": 33,
+      "resultat": 61.61,
+      "resultat_pct": 0.0696,
+      "jours": 108,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "CF",
+      "entree": "2022-03-15",
+      "sortie": "2022-12-28",
+      "prix_entree": 84.44,
+      "prix_sortie": 79.58,
+      "quantite": 9,
+      "resultat": -50.12,
+      "resultat_pct": -0.0657,
+      "jours": 199,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "DVN",
+      "entree": "2021-06-07",
+      "sortie": "2022-12-29",
+      "prix_entree": 24.16,
+      "prix_sortie": 52.44,
+      "quantite": 47,
+      "resultat": 1316.59,
+      "resultat_pct": 1.155,
+      "jours": 395,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "OXY",
+      "entree": "2022-03-11",
+      "sortie": "2022-12-30",
+      "prix_entree": 52.93,
+      "prix_sortie": 58.18,
+      "quantite": 17,
+      "resultat": 81.6,
+      "resultat_pct": 0.0903,
+      "jours": 203,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "LLY",
+      "entree": "2022-07-18",
+      "sortie": "2023-03-06",
+      "prix_entree": 318.5,
+      "prix_sortie": 308.63,
+      "quantite": 3,
+      "resultat": -37.24,
+      "resultat_pct": -0.0388,
+      "jours": 159,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "VRTX",
+      "entree": "2022-07-15",
+      "sortie": "2023-03-09",
+      "prix_entree": 286.08,
+      "prix_sortie": 288.3,
+      "quantite": 3,
+      "resultat": -0.51,
+      "resultat_pct": -0.0006,
+      "jours": 163,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "MCK",
+      "entree": "2022-05-16",
+      "sortie": "2023-03-13",
+      "prix_entree": 318.64,
+      "prix_sortie": 328.85,
+      "quantite": 2,
+      "resultat": 14.53,
+      "resultat_pct": 0.0227,
+      "jours": 206,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "VLO",
+      "entree": "2022-05-09",
+      "sortie": "2023-05-05",
+      "prix_entree": 110.38,
+      "prix_sortie": 97.3,
+      "quantite": 9,
+      "resultat": -125.38,
+      "resultat_pct": -0.1257,
+      "jours": 249,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "URI",
+      "entree": "2023-03-13",
+      "sortie": "2023-05-17",
+      "prix_entree": 403.97,
+      "prix_sortie": 320.96,
+      "quantite": 2,
+      "resultat": -172.38,
+      "resultat_pct": -0.2125,
+      "jours": 46,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "MPC",
+      "entree": "2022-06-29",
+      "sortie": "2023-05-22",
+      "prix_entree": 81.83,
+      "prix_sortie": 103.37,
+      "quantite": 13,
+      "resultat": 270.79,
+      "resultat_pct": 0.2536,
+      "jours": 225,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "XOM",
+      "entree": "2022-07-12",
+      "sortie": "2023-06-07",
+      "prix_entree": 72.33,
+      "prix_sortie": 95.38,
+      "quantite": 10,
+      "resultat": 223.49,
+      "resultat_pct": 0.3077,
+      "jours": 228,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "ROST",
+      "entree": "2022-12-30",
+      "sortie": "2023-06-07",
+      "prix_entree": 110.58,
+      "prix_sortie": 100.39,
+      "quantite": 10,
+      "resultat": -110.28,
+      "resultat_pct": -0.0993,
+      "jours": 108,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "GILD",
+      "entree": "2022-12-29",
+      "sortie": "2023-06-13",
+      "prix_entree": 75.06,
+      "prix_sortie": 68.71,
+      "quantite": 15,
+      "resultat": -103.63,
+      "resultat_pct": -0.0917,
+      "jours": 113,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "LW",
+      "entree": "2022-07-22",
+      "sortie": "2023-08-21",
+      "prix_entree": 68.94,
+      "prix_sortie": 87.49,
+      "quantite": 15,
+      "resultat": 269.28,
+      "resultat_pct": 0.2594,
+      "jours": 271,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "WYNN",
+      "entree": "2023-03-06",
+      "sortie": "2023-08-28",
+      "prix_entree": 111.95,
+      "prix_sortie": 92.93,
+      "quantite": 11,
+      "resultat": -218.07,
+      "resultat_pct": -0.1764,
+      "jours": 121,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "FSLR",
+      "entree": "2022-12-28",
+      "sortie": "2023-09-11",
+      "prix_entree": 150.0,
+      "prix_sortie": 185.23,
+      "quantite": 7,
+      "resultat": 237.57,
+      "resultat_pct": 0.2254,
+      "jours": 175,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "CCL",
+      "entree": "2023-08-21",
+      "sortie": "2023-10-23",
+      "prix_entree": 15.44,
+      "prix_sortie": 10.75,
+      "quantite": 79,
+      "resultat": -378.75,
+      "resultat_pct": -0.3093,
+      "jours": 44,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "ADBE",
+      "entree": "2023-08-28",
+      "sortie": "2024-03-20",
+      "prix_entree": 525.7,
+      "prix_sortie": 523.29,
+      "quantite": 2,
+      "resultat": -13.11,
+      "resultat_pct": -0.0124,
+      "jours": 141,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "AMD",
+      "entree": "2023-06-07",
+      "sortie": "2024-08-07",
+      "prix_entree": 124.03,
+      "prix_sortie": 133.75,
+      "quantite": 10,
+      "resultat": 87.47,
+      "resultat_pct": 0.0703,
+      "jours": 293,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "SMCI",
+      "entree": "2024-03-20",
+      "sortie": "2024-08-14",
+      "prix_entree": 90.0,
+      "prix_sortie": 58.41,
+      "quantite": 12,
+      "resultat": -386.4,
+      "resultat_pct": -0.3564,
+      "jours": 101,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "LLY",
+      "entree": "2023-09-11",
+      "sortie": "2024-11-19",
+      "prix_entree": 574.48,
+      "prix_sortie": 706.73,
+      "quantite": 2,
+      "resultat": 254.81,
+      "resultat_pct": 0.2209,
+      "jours": 301,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "PHM",
+      "entree": "2023-05-22",
+      "sortie": "2024-12-26",
+      "prix_entree": 67.34,
+      "prix_sortie": 108.25,
+      "quantite": 17,
+      "resultat": 684.49,
+      "resultat_pct": 0.5956,
+      "jours": 402,
+      "raison": "croisement baissier"
+     }
+    ],
+    "positions_ouvertes": [
+     {
+      "action": "RCL",
+      "entree": "2023-03-09",
+      "prix_entree": 69.36,
+      "quantite": 17,
+      "stop": -Infinity,
+      "dernier": 224.06
+     },
+     {
+      "action": "NVDA",
+      "entree": "2023-05-05",
+      "prix_entree": 27.74,
+      "quantite": 40,
+      "stop": -Infinity,
+      "dernier": 133.94
+     },
+     {
+      "action": "META",
+      "entree": "2023-05-17",
+      "prix_entree": 236.19,
+      "quantite": 3,
+      "stop": -Infinity,
+      "dernier": 582.17
+     },
+     {
+      "action": "GE",
+      "entree": "2023-06-07",
+      "prix_entree": 83.54,
+      "quantite": 13,
+      "stop": -Infinity,
+      "dernier": 165.15
+     },
+     {
+      "action": "AVGO",
+      "entree": "2023-06-13",
+      "prix_entree": 82.47,
+      "quantite": 12,
+      "stop": -Infinity,
+      "dernier": 228.5
+     },
+     {
+      "action": "CEG",
+      "entree": "2023-10-23",
+      "prix_entree": 109.53,
+      "quantite": 9,
+      "stop": -Infinity,
+      "dernier": 221.14
+     },
+     {
+      "action": "IRM",
+      "entree": "2024-08-07",
+      "prix_entree": 100.03,
+      "quantite": 13,
+      "stop": -Infinity,
+      "dernier": 99.18
+     },
+     {
+      "action": "MMM",
+      "entree": "2024-08-14",
+      "prix_entree": 119.16,
+      "quantite": 6,
+      "stop": -Infinity,
+      "dernier": 124.41
+     },
+     {
+      "action": "PLTR",
+      "entree": "2024-11-19",
+      "prix_entree": 59.51,
+      "quantite": 24,
+      "stop": -Infinity,
+      "dernier": 75.63
+     },
+     {
+      "action": "TSLA",
+      "entree": "2024-12-26",
+      "prix_entree": 465.16,
+      "quantite": 3,
+      "stop": -Infinity,
+      "dernier": 403.84
+     }
+    ]
+   },
+   "MM20/MM200 pur sur l’indice (SPY ou liquidités)": {
+    "mesures": {
+     "final": 16396.79,
+     "total": 0.639678785243148,
+     "cagr": 0.13784230463114544,
+     "chute_max": -0.18454233062626402,
+     "sharpe": 1.154085412426125,
+     "calmar": 0.7469413882623186,
+     "annees": {
+      "2021": 0.2784194712270813,
+      "2022": -0.14005256152602163,
+      "2023": 0.1942579147816068,
+      "2024": 0.24886462945796883
+     },
+     "trades": 3,
+     "reussite": 0.6666666666666666,
+     "gain_moyen": 768.3599999999999,
+     "perte_moyenne": -542.99,
+     "duree_moyenne": 100.0,
+     "frais": 241.26,
+     "exposition": 0.7800995024875622
+    },
+    "trades": [
+     {
+      "action": "SPY",
+      "entree": "2021-01-04",
+      "sortie": "2022-02-25",
+      "prix_entree": 347.63,
+      "prix_sortie": 403.23,
+      "quantite": 28.677,
+      "resultat": 1527.85,
+      "resultat_pct": 0.1528,
+      "jours": 289,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "SPY",
+      "entree": "2022-02-28",
+      "sortie": "2022-03-01",
+      "prix_entree": 405.5,
+      "prix_sortie": 408.32,
+      "quantite": 28.341,
+      "resultat": 8.87,
+      "resultat_pct": 0.0008,
+      "jours": 1,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "SPY",
+      "entree": "2022-04-11",
+      "sortie": "2022-04-26",
+      "prix_entree": 418.13,
+      "prix_sortie": 400.92,
+      "quantite": 27.506,
+      "resultat": -542.99,
+      "resultat_pct": -0.0471,
+      "jours": 10,
+      "raison": "croisement baissier"
+     }
+    ],
+    "positions_ouvertes": []
+   }
+  }
+ },
+ "Validation": {
+  "debut": "2025-01-01",
+  "fin": "2026-11-20",
+  "reference": {
+   "final": 11896.73,
+   "total": 0.1896728081646386,
+   "cagr": 0.10328325345833478,
+   "chute_max": -0.18755242410695105,
+   "sharpe": 0.6523327818432361,
+   "calmar": 0.550690048129892,
+   "annees": {
+    "2025": 0.16695071834183262,
+    "2026": 0.019471336248965798
+   }
+  },
+  "regles": {
+   "MM20/MM200 pur sur actions (sans stop)": {
+    "mesures": {
+     "final": 13711.72,
+     "total": 0.3711715447232491,
+     "cagr": 0.18273143098914835,
+     "chute_max": -0.46912487747918474,
+     "sharpe": 0.5993784275658045,
+     "calmar": 0.38951554215381856,
+     "annees": {
+      "2025": 0.17717399491636132,
+      "2026": 0.16479938449597786
+     },
+     "trades": 25,
+     "reussite": 0.36,
+     "gain_moyen": 701.3022222222221,
+     "perte_moyenne": -203.90875,
+     "duree_moyenne": 157.56,
+     "frais": 240.09,
+     "exposition": 0.9635654557388187
+    },
+    "trades": [
+     {
+      "action": "TSLA",
+      "entree": "2025-01-03",
+      "sortie": "2025-03-19",
+      "prix_entree": 381.48,
+      "prix_sortie": 231.61,
+      "quantite": 2,
+      "resultat": -305.42,
+      "resultat_pct": -0.3986,
+      "jours": 50,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "APO",
+      "entree": "2025-01-03",
+      "sortie": "2025-03-27",
+      "prix_entree": 161.02,
+      "prix_sortie": 139.31,
+      "quantite": 6,
+      "resultat": -137.68,
+      "resultat_pct": -0.1419,
+      "jours": 56,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "CCL",
+      "entree": "2025-01-03",
+      "sortie": "2025-03-28",
+      "prix_entree": 24.51,
+      "prix_sortie": 20.27,
+      "quantite": 40,
+      "resultat": -176.97,
+      "resultat_pct": -0.1798,
+      "jours": 57,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "UAL",
+      "entree": "2025-01-03",
+      "sortie": "2025-04-07",
+      "prix_entree": 95.4,
+      "prix_sortie": 54.91,
+      "quantite": 10,
+      "resultat": -411.41,
+      "resultat_pct": -0.4295,
+      "jours": 63,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "VST",
+      "entree": "2025-01-03",
+      "sortie": "2025-04-07",
+      "prix_entree": 152.85,
+      "prix_sortie": 91.91,
+      "quantite": 6,
+      "resultat": -372.02,
+      "resultat_pct": -0.404,
+      "jours": 63,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "RCL",
+      "entree": "2025-01-03",
+      "sortie": "2025-04-16",
+      "prix_entree": 223.41,
+      "prix_sortie": 187.13,
+      "quantite": 4,
+      "resultat": -152.07,
+      "resultat_pct": -0.1695,
+      "jours": 70,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "TPL",
+      "entree": "2025-01-03",
+      "sortie": "2025-06-13",
+      "prix_entree": 391.87,
+      "prix_sortie": 370.37,
+      "quantite": 2,
+      "resultat": -49.57,
+      "resultat_pct": -0.063,
+      "jours": 110,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "EQT",
+      "entree": "2025-04-07",
+      "sortie": "2025-09-16",
+      "prix_entree": 43.71,
+      "prix_sortie": 49.46,
+      "quantite": 18,
+      "resultat": 96.5,
+      "resultat_pct": 0.1221,
+      "jours": 111,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "PM",
+      "entree": "2025-03-27",
+      "sortie": "2025-10-22",
+      "prix_entree": 146.59,
+      "prix_sortie": 146.68,
+      "quantite": 6,
+      "resultat": -6.76,
+      "resultat_pct": -0.0077,
+      "jours": 144,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "T",
+      "entree": "2025-03-28",
+      "sortie": "2025-10-23",
+      "prix_entree": 26.23,
+      "prix_sortie": 24.51,
+      "quantite": 35,
+      "resultat": -67.42,
+      "resultat_pct": -0.0731,
+      "jours": 144,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "VRSN",
+      "entree": "2025-04-07",
+      "sortie": "2025-10-30",
+      "prix_entree": 230.3,
+      "prix_sortie": 229.81,
+      "quantite": 3,
+      "resultat": -7.61,
+      "resultat_pct": -0.011,
+      "jours": 143,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "AXON",
+      "entree": "2025-01-03",
+      "sortie": "2025-11-12",
+      "prix_entree": 595.36,
+      "prix_sortie": 570.35,
+      "quantite": 1,
+      "resultat": -30.51,
+      "resultat_pct": -0.051,
+      "jours": 215,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "NRG",
+      "entree": "2025-06-13",
+      "sortie": "2026-01-30",
+      "prix_entree": 147.14,
+      "prix_sortie": 150.88,
+      "quantite": 5,
+      "resultat": 12.24,
+      "resultat_pct": 0.0166,
+      "jours": 158,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "TTWO",
+      "entree": "2025-04-16",
+      "sortie": "2026-02-05",
+      "prix_entree": 213.8,
+      "prix_sortie": 201.78,
+      "quantite": 4,
+      "resultat": -55.07,
+      "resultat_pct": -0.0641,
+      "jours": 202,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "HOOD",
+      "entree": "2025-10-22",
+      "sortie": "2026-02-06",
+      "prix_entree": 131.63,
+      "prix_sortie": 77.86,
+      "quantite": 7,
+      "resultat": -382.79,
+      "resultat_pct": -0.4137,
+      "jours": 73,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "PLTR",
+      "entree": "2025-01-03",
+      "sortie": "2026-02-10",
+      "prix_entree": 75.39,
+      "prix_sortie": 144.96,
+      "quantite": 13,
+      "resultat": 893.88,
+      "resultat_pct": 0.9084,
+      "jours": 275,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "GILD",
+      "entree": "2025-03-19",
+      "sortie": "2026-06-24",
+      "prix_entree": 105.56,
+      "prix_sortie": 124.86,
+      "quantite": 8,
+      "resultat": 146.87,
+      "resultat_pct": 0.1732,
+      "jours": 317,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "ALB",
+      "entree": "2026-02-05",
+      "sortie": "2026-07-08",
+      "prix_entree": 158.72,
+      "prix_sortie": 125.78,
+      "quantite": 5,
+      "resultat": -171.0,
+      "resultat_pct": -0.2146,
+      "jours": 104,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "TPR",
+      "entree": "2025-01-03",
+      "sortie": "2026-09-03",
+      "prix_entree": 64.54,
+      "prix_sortie": 124.04,
+      "quantite": 15,
+      "resultat": 881.94,
+      "resultat_pct": 0.9073,
+      "jours": 417,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "CIEN",
+      "entree": "2026-02-10",
+      "sortie": "2026-09-14",
+      "prix_entree": 288.08,
+      "prix_sortie": 326.98,
+      "quantite": 4,
+      "resultat": 146.22,
+      "resultat_pct": 0.1264,
+      "jours": 148,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "WDC",
+      "entree": "2025-09-16",
+      "sortie": "2026-10-21",
+      "prix_entree": 102.34,
+      "prix_sortie": 380.25,
+      "quantite": 9,
+      "resultat": 2486.17,
+      "resultat_pct": 2.6883,
+      "jours": 276,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "TER",
+      "entree": "2026-02-06",
+      "sortie": "2026-11-03",
+      "prix_entree": 281.34,
+      "prix_sortie": 269.22,
+      "quantite": 1,
+      "resultat": -15.77,
+      "resultat_pct": -0.0557,
+      "jours": 186,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "STX",
+      "entree": "2025-10-23",
+      "sortie": "2026-11-04",
+      "prix_entree": 216.97,
+      "prix_sortie": 569.59,
+      "quantite": 4,
+      "resultat": 1399.04,
+      "resultat_pct": 1.6053,
+      "jours": 259,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "SNDK",
+      "entree": "2026-01-30",
+      "sortie": "2026-11-09",
+      "prix_entree": 81.4,
+      "prix_sortie": 107.06,
+      "quantite": 10,
+      "resultat": 248.86,
+      "resultat_pct": 0.3044,
+      "jours": 195,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "MRVL",
+      "entree": "2026-06-24",
+      "sortie": "2026-11-18",
+      "prix_entree": 281.82,
+      "prix_sortie": 151.91,
+      "quantite": 7,
+      "resultat": -920.47,
+      "resultat_pct": -0.465,
+      "jours": 103,
+      "raison": "croisement baissier"
+     }
+    ],
+    "positions_ouvertes": [
+     {
+      "action": "MU",
+      "entree": "2025-10-30",
+      "prix_entree": 225.84,
+      "quantite": 3,
+      "stop": -Infinity,
+      "dernier": 594.51
+     },
+     {
+      "action": "AMD",
+      "entree": "2025-11-12",
+      "prix_entree": 253.13,
+      "quantite": 2,
+      "stop": -Infinity,
+      "dernier": 424.39
+     },
+     {
+      "action": "DELL",
+      "entree": "2026-07-08",
+      "prix_entree": 421.6,
+      "quantite": 1,
+      "stop": -Infinity,
+      "dernier": 278.02
+     },
+     {
+      "action": "MRNA",
+      "entree": "2026-09-03",
+      "prix_entree": 145.95,
+      "quantite": 12,
+      "stop": -Infinity,
+      "dernier": 195.0
+     },
+     {
+      "action": "HPE",
+      "entree": "2026-09-14",
+      "prix_entree": 55.46,
+      "quantite": 28,
+      "stop": -Infinity,
+      "dernier": 40.91
+     },
+     {
+      "action": "P",
+      "entree": "2026-10-21",
+      "prix_entree": 131.24,
+      "quantite": 14,
+      "stop": -Infinity,
+      "dernier": 92.05
+     },
+     {
+      "action": "MPC",
+      "entree": "2026-11-03",
+      "prix_entree": 428.8,
+      "quantite": 3,
+      "stop": -Infinity,
+      "dernier": 367.19
+     },
+     {
+      "action": "PAYC",
+      "entree": "2026-11-04",
+      "prix_entree": 266.43,
+      "quantite": 6,
+      "stop": -Infinity,
+      "dernier": 241.64
+     },
+     {
+      "action": "OKTA",
+      "entree": "2026-11-09",
+      "prix_entree": 169.34,
+      "quantite": 8,
+      "stop": -Infinity,
+      "dernier": 191.46
+     },
+     {
+      "action": "CRL",
+      "entree": "2026-11-18",
+      "prix_entree": 332.15,
+      "quantite": 4,
+      "stop": -Infinity,
+      "dernier": 314.32
+     }
+    ]
+   },
+   "MM20/MM200 pur sur l’indice (SPY ou liquidités)": {
+    "mesures": {
+     "final": 10711.09,
+     "total": 0.07110872446522354,
+     "cagr": 0.04338457472846269,
+     "chute_max": -0.11459526655375551,
+     "sharpe": 0.3967538959184738,
+     "calmar": 0.378589587800395,
+     "annees": {
+      "2025": 0.13821254550512796,
+      "2026": -0.05895543965395711
+     },
+     "trades": 2,
+     "reussite": 0.5,
+     "gain_moyen": 1215.21,
+     "perte_moyenne": -272.1,
+     "duree_moyenne": 135.5,
+     "frais": 158.93,
+     "exposition": 0.8924050632911392
+    },
+    "trades": [
+     {
+      "action": "SPY",
+      "entree": "2025-01-02",
+      "sortie": "2025-03-26",
+      "prix_entree": 578.03,
+      "prix_sortie": 565.8,
+      "quantite": 17.247,
+      "resultat": -272.1,
+      "resultat_pct": -0.0272,
+      "jours": 56,
+      "raison": "croisement baissier"
+     },
+     {
+      "action": "SPY",
+      "entree": "2025-05-27",
+      "sortie": "2026-04-06",
+      "prix_entree": 576.51,
+      "prix_sortie": 652.55,
+      "quantite": 16.822,
+      "resultat": 1215.21,
+      "resultat_pct": 0.1249,
+      "jours": 215,
+      "raison": "croisement baissier"
+     }
+    ],
+    "positions_ouvertes": []
+   }
+  }
+ }
+}
