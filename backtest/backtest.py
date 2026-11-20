@@ -58,14 +58,18 @@ NOMS_FAMILLES = {"tendance": "Tendance MM20/MM200", "momentum": "Momentum 12 moi
 
 
 SPECIALES = [
-    dict(type="pur_actions"),   # MM20/MM200 pur sur les actions, sans stop
-    dict(type="pur_indice"),    # MM20/MM200 pur sur l'ETF S&P 500 (SPY), sans stop
+    dict(type="pur_indice"),               # MM20/MM200 pur sur l'ETF S&P 500 (SPY), sans stop
+    dict(type="pur_actions"),              # MM20/MM200 pur sur les actions, 10 lignes, sans stop
+    dict(type="pur_actions", lignes=5),    # contrôles de solidité : même règle, autre nombre de lignes
+    dict(type="pur_actions", lignes=15),
+    dict(type="pur_actions", lignes=20),
 ]
 
 
 def nom_config(c):
     if c.get("type") == "pur_actions":
-        return "MM20/MM200 pur sur actions (sans stop)"
+        n = c.get("lignes", P["max_lignes"])
+        return "MM20/MM200 pur sur actions (sans stop)" + ("" if n == P["max_lignes"] else f" · {n} lignes")
     if c.get("type") == "pur_indice":
         return "MM20/MM200 pur sur l’indice (SPY ou liquidités)"
     return (f"{NOMS_FAMILLES[c['famille']]} · chandeliers {'oui' if c['chandeliers'] else 'non'}"
@@ -172,12 +176,81 @@ def dates_resultats(tickers):
     return sortie
 
 
+ALIAS = {  # anciens symboles -> symbole actuel (Yahoo garde l'historique sous le symbole actuel)
+    "FB": "META", "ANTM": "ELV", "BLL": "BALL", "RE": "EG", "PKI": "RVTY", "ABC": "COR", "FLT": "CPAY",
+    "BK": "BNY", "SQ": "XYZ", "PEAK": "DOC", "CDAY": "DAY", "DISCA": "WBD", "FI": "FISV", "MMC": "MRSH",
+    "VIAC": "SKYD", "PARA": "SKYD", "WLTW": "WTW", "NLOK": "GEN", "FBHS": "FBIN", "COG": "CTRA",
+}
+
+
+def symbole(t):
+    import re
+    t = re.sub(r"-\d{6}$", "", str(t).strip()).replace(".", "-")
+    return ALIAS.get(t, t)
+
+
+def composition_historique():
+    """Composition historique du S&P 500 depuis deux jeux de données publics ; garde le plus récent."""
+    import requests
+    from io import StringIO
+    entete = {"User-Agent": "SignauxBacktest/1.0 (usage personnel)"}
+    candidats = []
+    try:
+        liste = requests.get("https://api.github.com/repos/fja05680/sp500/contents/", headers=entete, timeout=30).json()
+        fichiers = [f for f in liste if isinstance(f, dict) and f.get("name", "").startswith("S&P 500 Historical Components")
+                    and f["name"].endswith(".csv")]
+        fichiers.sort(key=lambda f: pd.to_datetime(f["name"].split("(")[-1].split(")")[0], format="%m-%d-%Y", errors="coerce")
+                      if "(" in f["name"] else pd.Timestamp("1900-01-01"))
+        if fichiers:
+            candidats.append(("fja05680/sp500", fichiers[-1]["download_url"]))
+    except Exception as e:
+        print(f"  fja05680/sp500 indisponible : {e}")
+    candidats.append(("hanshof/sp500_constituents",
+                      "https://raw.githubusercontent.com/hanshof/sp500_constituents/master/sp_500_historical_components.csv"))
+    meilleur = None
+    for nom, url in candidats:
+        try:
+            r = requests.get(url, headers=entete, timeout=60)
+            r.raise_for_status()
+            df = pd.read_csv(StringIO(r.text))
+            c_d, c_t = df.columns[0], df.columns[1]
+            snaps = []
+            for d, t in zip(pd.to_datetime(df[c_d], errors="coerce"), df[c_t]):
+                if pd.isna(d) or pd.isna(t):
+                    continue
+                snaps.append((d.normalize(), frozenset(symbole(x) for x in str(t).split(",") if x.strip())))
+            snaps.sort(key=lambda x: x[0])
+            if len(snaps) >= 2 and 400 <= len(snaps[-1][1]) <= 520:
+                print(f"  {nom} : {len(snaps)} relevés, dernier le {snaps[-1][0].date()}")
+                if meilleur is None or snaps[-1][0] > meilleur[1][-1][0]:
+                    meilleur = (nom, snaps)
+        except Exception as e:
+            print(f"  {nom} indisponible : {e}")
+    return meilleur
+
+
 def charger_reel():
     print("Lecture de la composition du S&P 500…")
     actuels, changements, noms, composition = lire_wikipedia()
-    anciens = {r for d, a, r in changements if r and d >= pd.Timestamp(DEBUT_DONNEES)}
+    actuels = [symbole(t) for t in actuels]
+    histo = composition_historique()
+    snapshots = None
+    if histo:
+        nom_src, snaps = histo
+        debut = pd.Timestamp(DEBUT_DONNEES)
+        avant = [s_ for s_ in snaps if s_[0] <= debut]
+        snapshots = (avant[-1:] if avant else []) + [s_ for s_ in snaps if s_[0] > debut]
+        dernier = snapshots[-1][0]
+        # après le dernier relevé : on ajoute les entrées connues par Wikipedia
+        ajouts = [(d, symbole(a)) for d, a, r in changements if a and d > dernier]
+        anciens = set().union(*[s_[1] for s_ in snapshots])
+        composition = (f"historique complète ({nom_src}, relevé au {dernier:%d/%m/%Y}"
+                       + (f", complété par {len(ajouts)} entrées récentes de Wikipedia" if ajouts else "") + ")")
+    else:
+        ajouts = []
+        anciens = {symbole(r) for d, a, r in changements if r and d >= pd.Timestamp(DEBUT_DONNEES)}
     tickers = sorted(set(actuels) | anciens)
-    print(f"{len(actuels)} membres actuels + {len(anciens - set(actuels))} anciens membres depuis 2019")
+    print(f"{len(actuels)} membres actuels, {len(tickers)} actions ayant fait partie de l'indice depuis 2019")
     print("Téléchargement des cours (quelques minutes)…")
     px = telecharger(tickers, DEBUT_DONNEES)
     spy = telecharger(["SPY"], DEBUT_DONNEES)
@@ -185,6 +258,7 @@ def charger_reel():
     res = dates_resultats([t for t in tickers if t in px["Close"].columns])
     return dict(px=px, spy=spy["Close"]["SPY"], spy_open=spy["Open"]["SPY"],
                 actuels=actuels, changements=changements, noms=noms, tickers_demandes=tickers,
+                snapshots=snapshots, ajouts=ajouts,
                 resultats=res, source="Yahoo Finance + Wikipedia", composition=composition)
 
 
@@ -219,6 +293,22 @@ def charger_demo():
 
 
 # ---------------------------------------------------------------- indicateurs
+def appartenance_releves(index, snapshots, ajouts, tickers):
+    pos = {t: k for k, t in enumerate(tickers)}
+    arr = np.zeros((len(index), len(tickers)), bool)
+    dates = [s_[0] for s_ in snapshots]
+    for i, d in enumerate(index):
+        j = max(0, int(np.searchsorted(dates, d, side="right")) - 1)
+        membres = set(snapshots[j][1])
+        if d > dates[-1]:
+            membres |= {a for da, a in ajouts if da <= d}
+        for t in membres:
+            k = pos.get(t)
+            if k is not None:
+                arr[i, k] = True
+    return arr
+
+
 def appartenance(index, actuels, changements, tickers):
     S, ch, j = set(actuels), sorted(changements, key=lambda x: x[0], reverse=True), 0
     pos = {t: k for k, t in enumerate(tickers)}
@@ -264,7 +354,10 @@ def preparer(D):
     avalement = (c.shift(1) < o.shift(1)) & (c > o) & (o <= c.shift(1)) & (c >= o.shift(1))
     confirm = (marteau | avalement).astype(float).rolling(3, min_periods=1).max() > 0
 
-    membres = appartenance(idx, D["actuels"], D["changements"], tick)
+    if D.get("snapshots"):
+        membres = appartenance_releves(idx, D["snapshots"], D.get("ajouts", []), tick)
+    else:
+        membres = appartenance(idx, D["actuels"], D["changements"], tick)
     valide = membres & c.notna().values & ma200.notna().values & atr.notna().values
     V = pd.DataFrame(valide, index=idx, columns=tick)
 
@@ -328,6 +421,7 @@ def simuler(I, cfg, debut, fin):
     if not pur and cfg["resultats"]:
         E &= ~I["proche"]
     k_atr = None if pur else cfg["atr_k"]
+    max_l = cfg.get("lignes", P["max_lignes"])
     st = dict(cash=P["capital"], frais=0.0)
     pos, trades, courbe, investi = {}, [], [], []
     a_vendre, a_acheter, bloque = {}, [], {}
@@ -359,14 +453,14 @@ def simuler(I, cfg, debut, fin):
         a_vendre = {}
         # 2. achats décidés la veille, à l'ouverture
         for k, atr_ref in a_acheter:
-            if k in pos or len(pos) >= P["max_lignes"]:
+            if k in pos or len(pos) >= max_l:
                 continue
             px = O[i, k]
             if not (np.isfinite(px) and px > 0):
                 continue
             if pur:   # sans stop : parts égales
                 dist = float("inf")
-                n = math.floor(eq_veille / P["max_lignes"] / px)
+                n = math.floor(eq_veille / max_l / px)
             else:
                 dist = k_atr * atr_ref
                 n = math.floor(min(P["risque_par_ligne"] * eq_veille / dist, P["poids_max"] * eq_veille / px))
@@ -405,7 +499,7 @@ def simuler(I, cfg, debut, fin):
                 a_vendre[k] = "perte de rang"
         # 5. à la clôture : achats pour le lendemain
         if (pur or I["marche_ok"][i]) and i + 1 < i1:
-            libres = P["max_lignes"] - (len(pos) - len(a_vendre))
+            libres = max_l - (len(pos) - len(a_vendre))
             if libres > 0:
                 cand = [k for k in np.flatnonzero(E[i]) if k not in pos and bloque.get(k, -1) < i
                         and np.isfinite(ATR[i, k]) and ATR[i, k] > 0]
@@ -570,6 +664,28 @@ Composition de l’indice : {I['composition']}<br>Couverture : {I['n_obtenus']} 
 
 
 # ---------------------------------------------------------------- deux modes
+def analyse_contributions(eq, trades, ouvertes, I):
+    """Quelles actions ont fait le résultat ? Gains réalisés + plus-values latentes en fin de période."""
+    contrib = {}
+    for t in trades:
+        contrib[t["action"]] = contrib.get(t["action"], 0.0) + t["resultat"]
+    for o in ouvertes:
+        contrib[o["action"]] = contrib.get(o["action"], 0.0) + o["quantite"] * (o["dernier"] - o["prix_entree"])
+    tri = sorted(contrib.items(), key=lambda x: -x[1])
+    gain = float(eq.iloc[-1] - P["capital"])
+    top3 = sum(v for _, v in tri[:3])
+    final_sans = float(eq.iloc[-1]) - top3
+    ans = (eq.index[-1] - eq.index[0]).days / 365.25
+    return dict(gain_total=round(gain, 2),
+                meilleures=[dict(action=a, nom=I["noms"].get(a, a), resultat=round(v, 2),
+                                 part=round(v / gain, 3) if gain > 0 else None) for a, v in tri[:10]],
+                pires=[dict(action=a, nom=I["noms"].get(a, a), resultat=round(v, 2)) for a, v in tri[-5:]],
+                part_top3=round(top3 / gain, 3) if gain > 0 else None,
+                final_sans_top3=round(final_sans, 2),
+                cagr_sans_top3=(final_sans / P["capital"]) ** (1 / ans) - 1 if final_sans > 0 else -1.0,
+                nb_actions=len(contrib))
+
+
 def developpement(I, dossier, prefixe):
     debut, fin = DEV
     configs = [dict(zip(GRILLE, v)) for v in product(*GRILLE.values())]
@@ -581,10 +697,13 @@ def developpement(I, dossier, prefixe):
         eq, tr, fr, ex, _ = simuler(I, c, debut, fin)
         res.append(dict(config=c, nom=nom_config(c), mesures=mesures(eq, tr, fr, ex), courbe=eq, trades=tr))
         print(f"  [{n}/{len(configs)}] {nom_config(c)} : {res[-1]['mesures']['cagr'] * 100:.1f} %/an")
+    solidite = {}
     for c in SPECIALES:
-        eq, tr, fr, ex, _ = lancer(I, c, debut, fin)
+        eq, tr, fr, ex, ouv = lancer(I, c, debut, fin)
         res.append(dict(config=c, nom=nom_config(c), mesures=mesures(eq, tr, fr, ex), courbe=eq, trades=tr))
         print(f"  [variante] {nom_config(c)} : {res[-1]['mesures']['cagr'] * 100:.1f} %/an")
+        if c.get("type") == "pur_actions" and "lignes" not in c:
+            solidite = analyse_contributions(eq, tr, ouv, I)
     ref = mesures(indice(I, debut, fin))
     ref_eq = indice(I, debut, fin)
     res.sort(key=lambda r: -np.nan_to_num(r["mesures"]["sharpe"], nan=-9))
@@ -597,7 +716,23 @@ def developpement(I, dossier, prefixe):
     styles = [dict(lw=1.6), dict(lw=1.2), dict(lw=1.2)]
     img = graphique([("S&P 500 (SPY)", ref_eq, dict(color="#888", lw=2, ls="--"))] +
                     [(r["nom"], r["courbe"], s) for r, s in zip(res[:3], styles)], "Évolution de 10 000 € — période de mise au point")
-    corps = f"""<p class="card">Période de mise au point : <b>{debut[:4]} à {fin[:4]}</b>. Les données 2025-2026 n’ont pas été utilisées.
+    purs = [r for r in res if r["config"].get("type") == "pur_actions"]
+    purs.sort(key=lambda r: r["config"].get("lignes", P["max_lignes"]))
+    t_sol = ENTETE + ligne("S&P 500 (SPY)", ref, True) + "".join(ligne(r["nom"], r["mesures"]) for r in purs)
+    bloc_contrib = ""
+    if solidite:
+        lignes_c = "".join(f'<tr><td>{c["action"]} — {c["nom"]}</td><td>{nb(c["resultat"], 0)} €</td>'
+                           f'<td>{pc(c["part"], False) if c["part"] is not None else "–"}</td></tr>' for c in solidite["meilleures"])
+        bloc_contrib = (f'<h2>Ce qui a fait le résultat (règle pure, 10 lignes)</h2><div class="card wrap">'
+                        f'<p>Gain total : <b>{nb(solidite["gain_total"], 0)} €</b> sur {solidite["nb_actions"]} actions. '
+                        f'Les 3 meilleures en apportent <b>{pc(solidite["part_top3"], False)}</b>. '
+                        f'Sans elles, le capital final aurait été d’environ <b>{nb(solidite["final_sans_top3"], 0)} €</b> '
+                        f'({pc(solidite["cagr_sans_top3"])} par an), à comparer aux {nb(ref["final"], 0)} € de l’indice.</p>'
+                        f'<table><tr><th>Action</th><th>Apport</th><th>Part du gain</th></tr>{lignes_c}</table></div>')
+    corps = f"""<h2>Solidité de la règle MM20/MM200 pure</h2><div class="card wrap"><p>Même règle, seul le nombre de lignes change.
+Une règle solide donne des résultats du même ordre dans tous les cas.</p><table>{t_sol}</table></div>
+{bloc_contrib}
+<p class="card">Période de mise au point : <b>{debut[:4]} à {fin[:4]}</b>. Les données 2025-2026 n’ont pas été utilisées.
 Choisissez une configuration robuste (pas seulement la première : ses voisines doivent aussi être bonnes), puis figez-la dans <code>backtest/config_retenue.json</code>.</p>
 <h2>Classement des {len(res)} configurations (par ratio de Sharpe)</h2><div class="card wrap"><table>{ENTETE}{lignes}</table></div>
 <h2>Année par année — les 5 premières</h2><div class="card wrap"><table>{t_an}</table></div>
@@ -606,53 +741,78 @@ Choisissez une configuration robuste (pas seulement la première : ses voisines 
         f.write(page("Backtest — mise au point (2021-2024)", corps, I))
     with open(os.path.join(dossier, f"{prefixe}resultats_developpement.json"), "w", encoding="utf-8") as f:
         json.dump(dict(periode=DEV, parametres=P, reference=ref,
+                       solidite=solidite,
                        configurations=[dict(nom=r["nom"], config=r["config"], mesures=r["mesures"]) for r in res]),
                   f, ensure_ascii=False, indent=1)
     print(f"\nMeilleure configuration : {res[0]['nom']}")
+
+
+def lire_configs(chemin):
+    with open(chemin, encoding="utf-8") as f:
+        brut = json.load(f)
+    brut = brut if isinstance(brut, list) else [brut]
+    sortie = []
+    for c in brut:
+        if c.get("type") == "pur_indice":
+            sortie.append({"type": "pur_indice"})
+        elif c.get("type") == "pur_actions":
+            sortie.append({"type": "pur_actions", **({"lignes": int(c["lignes"])} if "lignes" in c else {})})
+        else:
+            sortie.append({k: c[k] for k in GRILLE})
+    return sortie
 
 
 def validation(I, dossier, prefixe):
     chemin = os.path.join(dossier, "config_retenue.json")
     if not os.path.exists(chemin):
         sys.exit("Il manque backtest/config_retenue.json : choisissez d'abord une configuration après la mise au point.")
-    with open(chemin, encoding="utf-8") as f:
-        cfg = json.load(f)
-    cfg = {"type": cfg["type"]} if cfg.get("type") in ("pur_actions", "pur_indice") else {k: cfg[k] for k in GRILLE}
-    empreinte = hashlib.sha1(json.dumps([cfg, P], sort_keys=True).encode()).hexdigest()[:10]
+    cfgs = lire_configs(chemin)
+    noms = [nom_config(c) for c in cfgs]
+    empreinte = hashlib.sha1(json.dumps([cfgs, P], sort_keys=True).encode()).hexdigest()[:10]
     journal = os.path.join(dossier, f"{prefixe}journal_validation.json")
     deja = json.load(open(journal, encoding="utf-8")) if os.path.exists(journal) else []
     autres = [d for d in deja if d["empreinte"] != empreinte]
 
     fin_val = str(I["index"][-1].date())
-    blocs, periodes = [], [("Mise au point", *DEV), ("Validation", VAL_DEBUT, fin_val)]
-    sortie = dict(config=cfg, nom=nom_config(cfg), empreinte=empreinte, parametres=P)
-    graphs = []
+    periodes = [("Mise au point", *DEV), ("Validation", VAL_DEBUT, fin_val)]
+    sortie = dict(configs=cfgs, noms=noms, empreinte=empreinte, parametres=P)
+    blocs, graphs = [], []
     for titre, d, f_ in periodes:
-        eq, tr, fr, ex, ouv = lancer(I, cfg, d, f_)
-        m, ref = mesures(eq, tr, fr, ex), mesures(indice(I, d, f_))
-        sortie[titre] = dict(debut=d, fin=f_, mesures=m, reference=ref, trades=tr, positions_ouvertes=ouv)
-        blocs.append(f'<h2>{titre} : {d[:4]} → {f_[:7]}</h2><div class="card wrap"><table>{ENTETE}'
-                     f'{ligne("S&P 500 (SPY)", ref, True)}{ligne(nom_config(cfg), m)}</table></div>')
-        graphs.append(graphique([("S&P 500 (SPY)", indice(I, d, f_), dict(color="#888", lw=2, ls="--")),
-                                 (nom_config(cfg), eq, dict(lw=1.6))], f"{titre} — évolution de 10 000 €"))
-    v = sortie["Validation"]
-    derniers = sorted(v["trades"], key=lambda t: t["sortie"])[-25:]
-    t_tr = ("<tr><th>Action</th><th>Entrée</th><th>Sortie</th><th>Prix entrée</th><th>Prix sortie</th><th>Résultat</th><th>Raison</th></tr>" +
-            "".join(f'<tr><td>{t["action"]}</td><td>{t["entree"]}</td><td>{t["sortie"]}</td><td>{nb(t["prix_entree"])}</td>'
-                    f'<td>{nb(t["prix_sortie"])}</td><td>{pc(t["resultat_pct"])}</td><td>{t["raison"]}</td></tr>' for t in reversed(derniers)))
+        ref_eq = indice(I, d, f_)
+        ref = mesures(ref_eq)
+        sortie[titre] = dict(debut=d, fin=f_, reference=ref, regles={})
+        lignes_t, series = ligne("S&P 500 (SPY)", ref, True), [("S&P 500 (SPY)", ref_eq, dict(color="#888", lw=2, ls="--"))]
+        for c, nom in zip(cfgs, noms):
+            eq, tr, fr, ex, ouv = lancer(I, c, d, f_)
+            m = mesures(eq, tr, fr, ex)
+            sortie[titre]["regles"][nom] = dict(mesures=m, trades=tr, positions_ouvertes=ouv)
+            lignes_t += ligne(nom, m)
+            series.append((nom, eq, dict(lw=1.6)))
+        blocs.append(f'<h2>{titre} : {d[:4]} → {f_[:7]}</h2><div class="card wrap"><table>{ENTETE}{lignes_t}</table></div>')
+        graphs.append(graphique(series, f"{titre} — évolution de 10 000 €"))
+    tables_tr = ""
+    for nom in noms:
+        derniers = sorted(sortie["Validation"]["regles"][nom]["trades"], key=lambda t: t["sortie"])[-20:]
+        if not derniers:
+            continue
+        tables_tr += (f'<h3>{nom}</h3><table><tr><th>Action</th><th>Entrée</th><th>Sortie</th><th>Prix entrée</th>'
+                      f'<th>Prix sortie</th><th>Résultat</th><th>Raison</th></tr>' +
+                      "".join(f'<tr><td>{t["action"]}</td><td>{t["entree"]}</td><td>{t["sortie"]}</td><td>{nb(t["prix_entree"])}</td>'
+                              f'<td>{nb(t["prix_sortie"])}</td><td>{pc(t["resultat_pct"])}</td><td>{t["raison"]}</td></tr>'
+                              for t in reversed(derniers)) + "</table>")
     avert = (f'<p class="card alerte">Attention : la validation a déjà été lancée {len(autres)} fois avec d’autres réglages. '
              f'Chaque nouvel essai sur 2025-2026 réduit la valeur de ce test.</p>') if autres else ""
-    corps = (f'{avert}<p class="card">Configuration figée : <b>{nom_config(cfg)}</b> (empreinte {empreinte}).<br>'
+    corps = (f'{avert}<p class="card">Règles figées avant le test : <b>{" ; ".join(noms)}</b> (empreinte {empreinte}).<br>'
              f'Si les résultats de validation ressemblent à ceux de la mise au point, la règle est probablement solide. '
              f'S’ils s’effondrent, elle a appris le passé par cœur.</p>' + "".join(blocs) +
              '<h2>Courbes de capital</h2><div class="card">' + "".join(graphs) + "</div>" +
-             f'<h2>Derniers trades de la période de validation</h2><div class="card wrap"><table>{t_tr}</table></div>')
+             (f'<h2>Derniers trades de la période de validation</h2><div class="card wrap">{tables_tr}</div>' if tables_tr else ""))
     with open(os.path.join(dossier, f"{prefixe}rapport_validation.html"), "w", encoding="utf-8") as f:
         f.write(page("Backtest — validation (2025-2026)", corps, I))
     with open(os.path.join(dossier, f"{prefixe}resultats_validation.json"), "w", encoding="utf-8") as f:
         json.dump(sortie, f, ensure_ascii=False, indent=1, default=str)
     if not any(d["empreinte"] == empreinte for d in deja):
-        deja.append(dict(empreinte=empreinte, nom=nom_config(cfg), date=datetime.now(timezone.utc).isoformat(timespec="minutes")))
+        deja.append(dict(empreinte=empreinte, noms=noms, date=datetime.now(timezone.utc).isoformat(timespec="minutes")))
         with open(journal, "w", encoding="utf-8") as f:
             json.dump(deja, f, ensure_ascii=False, indent=1)
 
