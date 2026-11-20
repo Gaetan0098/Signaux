@@ -1,0 +1,1115 @@
+{
+ "periode": [
+  "2021-01-01",
+  "2024-12-31"
+ ],
+ "parametres": {
+  "capital": 10000.0,
+  "max_lignes": 10,
+  "risque_par_ligne": 0.01,
+  "poids_max": 0.2,
+  "frais_fixe": 1.0,
+  "frais_change": 0.0025,
+  "glissement": 0.0005,
+  "surext": 0.08,
+  "rang_sortie": 100,
+  "jours_avant_resultats": 5,
+  "attente_apres_stop": 20
+ },
+ "reference": {
+  "final": 16483.32,
+  "total": 0.6483324146866523,
+  "cagr": 0.1393473948833308,
+  "chute_max": -0.24496378575805022,
+  "sharpe": 0.8753324897992201,
+  "calmar": 0.5688489604784427,
+  "annees": {
+   "2021": 0.27840749322100256,
+   "2022": -0.18175362063962264,
+   "2023": 0.26175790333652516,
+   "2024": 0.24886462945796883
+  }
+ },
+ "configurations": [
+  {
+   "nom": "Momentum 12 mois · chandeliers oui · filtre résultats non · stop 3.5×ATR",
+   "config": {
+    "famille": "momentum",
+    "chandeliers": true,
+    "resultats": false,
+    "atr_k": 3.5
+   },
+   "mesures": {
+    "final": 13058.01,
+    "total": 0.30580090221839074,
+    "cagr": 0.06917494333256391,
+    "chute_max": -0.2918397323133136,
+    "sharpe": 0.47571591337662994,
+    "calmar": 0.23703058793344492,
+    "annees": {
+     "2021": 0.01492233798822773,
+     "2022": -0.18635480369735125,
+     "2023": 0.07196342370588682,
+     "2024": 0.47512601172844326
+    },
+    "trades": 333,
+    "reussite": 0.4084084084084084,
+    "gain_moyen": 86.72654411764707,
+    "perte_moyenne": -49.512538071066,
+    "duree_moyenne": 23.53153153153153,
+    "frais": 2435.21,
+    "exposition": 0.755254504129623
+   }
+  },
+  {
+   "nom": "Momentum 12 mois · chandeliers non · filtre résultats non · stop 5.0×ATR",
+   "config": {
+    "famille": "momentum",
+    "chandeliers": false,
+    "resultats": false,
+    "atr_k": 5.0
+   },
+   "mesures": {
+    "final": 11996.2,
+    "total": 0.1996197803545845,
+    "cagr": 0.04668296378282677,
+    "chute_max": -0.2617155128820441,
+    "sharpe": 0.39710932638670493,
+    "calmar": 0.17837293352903735,
+    "annees": {
+     "2021": -0.017269538006413843,
+     "2022": -0.1118524585943027,
+     "2023": 0.037965995316076695,
+     "2024": 0.32416149860753274
+    },
+    "trades": 194,
+    "reussite": 0.36082474226804123,
+    "gain_moyen": 85.3937142857143,
+    "perte_moyenne": -43.58717741935484,
+    "duree_moyenne": 41.829896907216494,
+    "frais": 1033.26,
+    "exposition": 0.5287844271323672
+   }
+  },
+  {
+   "nom": "Momentum 12 mois · chandeliers non · filtre résultats oui · stop 3.5×ATR",
+   "config": {
+    "famille": "momentum",
+    "chandeliers": false,
+    "resultats": true,
+    "atr_k": 3.5
+   },
+   "mesures": {
+    "final": 12344.35,
+    "total": 0.23443521336343887,
+    "cagr": 0.05421660856007837,
+    "chute_max": -0.25799885581014004,
+    "sharpe": 0.3789514518149106,
+    "calmar": 0.2101428255944518,
+    "annees": {
+     "2021": 0.00915442320090909,
+     "2022": -0.15984856018687366,
+     "2023": 0.1154987068834119,
+     "2024": 0.3052209217609221
+    },
+    "trades": 313,
+    "reussite": 0.36421725239616615,
+    "gain_moyen": 101.24350877192983,
+    "perte_moyenne": -51.69336683417085,
+    "duree_moyenne": 25.575079872204473,
+    "frais": 2155.14,
+    "exposition": 0.7262221721150577
+   }
+  },
+  {
+   "nom": "Tendance + momentum · chandeliers non · filtre résultats oui · stop 3.5×ATR",
+   "config": {
+    "famille": "combine",
+    "chandeliers": false,
+    "resultats": true,
+    "atr_k": 3.5
+   },
+   "mesures": {
+    "final": 11288.85,
+    "total": 0.12888524591399086,
+    "cagr": 0.030857381387170424,
+    "chute_max": -0.30481407343721334,
+    "sharpe": 0.2586481859407075,
+    "calmar": 0.10123345368935707,
+    "annees": {
+     "2021": 0.08603081476193775,
+     "2022": -0.1500431496848692,
+     "2023": -0.03014263763904035,
+     "2024": 0.260964626486619
+    },
+    "trades": 302,
+    "reussite": 0.3543046357615894,
+    "gain_moyen": 99.346261682243,
+    "perte_moyenne": -50.443025641025635,
+    "duree_moyenne": 26.54635761589404,
+    "frais": 2301.96,
+    "exposition": 0.7674459882541838
+   }
+  },
+  {
+   "nom": "Momentum 12 mois · chandeliers oui · filtre résultats oui · stop 2.5×ATR",
+   "config": {
+    "famille": "momentum",
+    "chandeliers": true,
+    "resultats": true,
+    "atr_k": 2.5
+   },
+   "mesures": {
+    "final": 11249.87,
+    "total": 0.1249866887219655,
+    "cagr": 0.029963775426540495,
+    "chute_max": -0.2783738399720319,
+    "sharpe": 0.25645900763511364,
+    "calmar": 0.10763861801651671,
+    "annees": {
+     "2021": 0.05422584290265142,
+     "2022": -0.10922726719225861,
+     "2023": -0.010801514228002351,
+     "2024": 0.2110536089382089
+    },
+    "trades": 504,
+    "reussite": 0.3611111111111111,
+    "gain_moyen": 82.00846153846153,
+    "perte_moyenne": -43.5088198757764,
+    "duree_moyenne": 14.601190476190476,
+    "frais": 3999.78,
+    "exposition": 0.7717494238241001
+   }
+  },
+  {
+   "nom": "Momentum 12 mois · chandeliers oui · filtre résultats non · stop 5.0×ATR",
+   "config": {
+    "famille": "momentum",
+    "chandeliers": true,
+    "resultats": false,
+    "atr_k": 5.0
+   },
+   "mesures": {
+    "final": 11052.14,
+    "total": 0.10521426356073649,
+    "cagr": 0.02539557611863752,
+    "chute_max": -0.2196038144730713,
+    "sharpe": 0.25535407180110864,
+    "calmar": 0.115642691269152,
+    "annees": {
+     "2021": -0.02741312387213879,
+     "2022": -0.09137320415771333,
+     "2023": 0.03495180698735734,
+     "2024": 0.208404708444748
+    },
+    "trades": 207,
+    "reussite": 0.3864734299516908,
+    "gain_moyen": 73.51775,
+    "perte_moyenne": -45.67291338582678,
+    "duree_moyenne": 38.869565217391305,
+    "frais": 1220.77,
+    "exposition": 0.5944302651768447
+   }
+  },
+  {
+   "nom": "Momentum 12 mois · chandeliers oui · filtre résultats oui · stop 3.5×ATR",
+   "config": {
+    "famille": "momentum",
+    "chandeliers": true,
+    "resultats": true,
+    "atr_k": 3.5
+   },
+   "mesures": {
+    "final": 11177.83,
+    "total": 0.11778305464842509,
+    "cagr": 0.028306474304517826,
+    "chute_max": -0.3105115539584171,
+    "sharpe": 0.25290155777944356,
+    "calmar": 0.09116077628566618,
+    "annees": {
+     "2021": 0.04076569326694446,
+     "2022": -0.19037605748850028,
+     "2023": 0.04915918716383372,
+     "2024": 0.26438641967794085
+    },
+    "trades": 334,
+    "reussite": 0.3712574850299401,
+    "gain_moyen": 86.58999999999999,
+    "perte_moyenne": -49.633523809523815,
+    "duree_moyenne": 23.508982035928145,
+    "frais": 2447.46,
+    "exposition": 0.7597297265663439
+   }
+  },
+  {
+   "nom": "Momentum 12 mois · chandeliers non · filtre résultats non · stop 3.5×ATR",
+   "config": {
+    "famille": "momentum",
+    "chandeliers": false,
+    "resultats": false,
+    "atr_k": 3.5
+   },
+   "mesures": {
+    "final": 11128.67,
+    "total": 0.11286690558488854,
+    "cagr": 0.027170842261604378,
+    "chute_max": -0.3127675463577617,
+    "sharpe": 0.2380890965672633,
+    "calmar": 0.08687231964445821,
+    "annees": {
+     "2021": -0.0154286428305902,
+     "2022": -0.17881128361873866,
+     "2023": 0.08320495810995321,
+     "2024": 0.27069820898681796
+    },
+    "trades": 312,
+    "reussite": 0.358974358974359,
+    "gain_moyen": 96.19446428571428,
+    "perte_moyenne": -50.4246,
+    "duree_moyenne": 25.483974358974358,
+    "frais": 2063.74,
+    "exposition": 0.7151561125095242
+   }
+  },
+  {
+   "nom": "Tendance MM20/MM200 · chandeliers oui · filtre résultats non · stop 5.0×ATR",
+   "config": {
+    "famille": "tendance",
+    "chandeliers": true,
+    "resultats": false,
+    "atr_k": 5.0
+   },
+   "mesures": {
+    "final": 10854.78,
+    "total": 0.08547759447511827,
+    "cagr": 0.020774151159035803,
+    "chute_max": -0.2593604399785593,
+    "sharpe": 0.21644530264228792,
+    "calmar": 0.08009760918339418,
+    "annees": {
+     "2021": 0.18236827425891433,
+     "2022": -0.14828465384229006,
+     "2023": 0.010279993761888484,
+     "2024": 0.06692003413008307
+    },
+    "trades": 240,
+    "reussite": 0.3625,
+    "gain_moyen": 89.28712643678158,
+    "perte_moyenne": -49.263333333333335,
+    "duree_moyenne": 33.9875,
+    "frais": 1736.19,
+    "exposition": 0.7001143784253032
+   }
+  },
+  {
+   "nom": "Tendance + momentum · chandeliers non · filtre résultats oui · stop 5.0×ATR",
+   "config": {
+    "famille": "combine",
+    "chandeliers": false,
+    "resultats": true,
+    "atr_k": 5.0
+   },
+   "mesures": {
+    "final": 10844.46,
+    "total": 0.08444581940901674,
+    "cagr": 0.020530830367011754,
+    "chute_max": -0.2340754844134284,
+    "sharpe": 0.2130443530049456,
+    "calmar": 0.087710297464342,
+    "annees": {
+     "2021": -0.03567378382698039,
+     "2022": -0.017753102236100937,
+     "2023": -0.01770491007517172,
+     "2024": 0.16552406816779563
+    },
+    "trades": 184,
+    "reussite": 0.358695652173913,
+    "gain_moyen": 103.76984848484848,
+    "perte_moyenne": -51.82076271186441,
+    "duree_moyenne": 46.21195652173913,
+    "frais": 1133.63,
+    "exposition": 0.6425677917593658
+   }
+  },
+  {
+   "nom": "Momentum 12 mois · chandeliers non · filtre résultats non · stop 2.5×ATR",
+   "config": {
+    "famille": "momentum",
+    "chandeliers": false,
+    "resultats": false,
+    "atr_k": 2.5
+   },
+   "mesures": {
+    "final": 10692.0,
+    "total": 0.0691999205690843,
+    "cagr": 0.016915047685001294,
+    "chute_max": -0.4437378468269838,
+    "sharpe": 0.1841645718308123,
+    "calmar": 0.038119461312473034,
+    "annees": {
+     "2021": -0.0385986183438215,
+     "2022": -0.17134727793635451,
+     "2023": -0.08405046888484335,
+     "2024": 0.4652443988788437
+    },
+    "trades": 487,
+    "reussite": 0.3675564681724846,
+    "gain_moyen": 79.82061452513966,
+    "perte_moyenne": -44.0599025974026,
+    "duree_moyenne": 15.388090349075975,
+    "frais": 3441.29,
+    "exposition": 0.7652883303928978
+   }
+  },
+  {
+   "nom": "Momentum 12 mois · chandeliers oui · filtre résultats non · stop 2.5×ATR",
+   "config": {
+    "famille": "momentum",
+    "chandeliers": true,
+    "resultats": false,
+    "atr_k": 2.5
+   },
+   "mesures": {
+    "final": 10602.74,
+    "total": 0.060274196733330676,
+    "cagr": 0.01478022059469053,
+    "chute_max": -0.330065112690091,
+    "sharpe": 0.17162641887494942,
+    "calmar": 0.04477971171878491,
+    "annees": {
+     "2021": -0.0006065256340364034,
+     "2022": -0.16675875466931867,
+     "2023": 0.0129692851484553,
+     "2024": 0.2569402879509932
+    },
+    "trades": 507,
+    "reussite": 0.3609467455621302,
+    "gain_moyen": 75.34371584699453,
+    "perte_moyenne": -41.506820987654315,
+    "duree_moyenne": 14.39447731755424,
+    "frais": 3807.73,
+    "exposition": 0.7670105547133463
+   }
+  },
+  {
+   "nom": "Tendance MM20/MM200 · chandeliers non · filtre résultats non · stop 3.5×ATR",
+   "config": {
+    "famille": "tendance",
+    "chandeliers": false,
+    "resultats": false,
+    "atr_k": 3.5
+   },
+   "mesures": {
+    "final": 10450.32,
+    "total": 0.04503190780877531,
+    "cagr": 0.011103275114014766,
+    "chute_max": -0.3565438576808456,
+    "sharpe": 0.1519887160914032,
+    "calmar": 0.031141400629466683,
+    "annees": {
+     "2021": 0.09504888277741008,
+     "2022": -0.08739644549046766,
+     "2023": -0.112373652671653,
+     "2024": 0.1781041982137337
+    },
+    "trades": 312,
+    "reussite": 0.3333333333333333,
+    "gain_moyen": 108.89384615384617,
+    "perte_moyenne": -55.34028846153846,
+    "duree_moyenne": 25.294871794871796,
+    "frais": 2361.5,
+    "exposition": 0.7708368324711885
+   }
+  },
+  {
+   "nom": "Tendance + momentum · chandeliers non · filtre résultats non · stop 3.5×ATR",
+   "config": {
+    "famille": "combine",
+    "chandeliers": false,
+    "resultats": false,
+    "atr_k": 3.5
+   },
+   "mesures": {
+    "final": 10395.13,
+    "total": 0.039512587407633415,
+    "cagr": 0.009761921126555606,
+    "chute_max": -0.29465761182637284,
+    "sharpe": 0.1443347202202743,
+    "calmar": 0.033129709651986944,
+    "annees": {
+     "2021": 0.08220390905960162,
+     "2022": -0.12894429809661456,
+     "2023": -0.06460734501930332,
+     "2024": 0.17891032386906902
+    },
+    "trades": 307,
+    "reussite": 0.3355048859934853,
+    "gain_moyen": 101.40873786407768,
+    "perte_moyenne": -52.1878431372549,
+    "duree_moyenne": 26.087947882736156,
+    "frais": 2333.43,
+    "exposition": 0.7707370639238759
+   }
+  },
+  {
+   "nom": "Momentum 12 mois · chandeliers non · filtre résultats oui · stop 5.0×ATR",
+   "config": {
+    "famille": "momentum",
+    "chandeliers": false,
+    "resultats": true,
+    "atr_k": 5.0
+   },
+   "mesures": {
+    "final": 10422.39,
+    "total": 0.042238825788614376,
+    "cagr": 0.010425140876321182,
+    "chute_max": -0.2721717329557154,
+    "sharpe": 0.14424752666042484,
+    "calmar": 0.03830354005945738,
+    "annees": {
+     "2021": -0.04482183277807816,
+     "2022": -0.10343282983727786,
+     "2023": 0.02972362059021938,
+     "2024": 0.1818962462401359
+    },
+    "trades": 193,
+    "reussite": 0.3471502590673575,
+    "gain_moyen": 81.98134328358208,
+    "perte_moyenne": -42.90007936507937,
+    "duree_moyenne": 42.66839378238342,
+    "frais": 1009.07,
+    "exposition": 0.5215798801935759
+   }
+  },
+  {
+   "nom": "Tendance + momentum · chandeliers non · filtre résultats non · stop 5.0×ATR",
+   "config": {
+    "famille": "combine",
+    "chandeliers": false,
+    "resultats": false,
+    "atr_k": 5.0
+   },
+   "mesures": {
+    "final": 10291.32,
+    "total": 0.029132390649257545,
+    "cagr": 0.007224709277988239,
+    "chute_max": -0.27309591661593,
+    "sharpe": 0.12211723912407306,
+    "calmar": 0.02645484182815062,
+    "annees": {
+     "2021": 0.009748043432693532,
+     "2022": -0.03191212032296409,
+     "2023": -0.07664133410160168,
+     "2024": 0.14017893909203027
+    },
+    "trades": 188,
+    "reussite": 0.32978723404255317,
+    "gain_moyen": 107.55774193548389,
+    "perte_moyenne": -52.67738095238095,
+    "duree_moyenne": 44.744680851063826,
+    "frais": 1160.67,
+    "exposition": 0.6423612558504085
+   }
+  },
+  {
+   "nom": "Tendance MM20/MM200 · chandeliers oui · filtre résultats non · stop 3.5×ATR",
+   "config": {
+    "famille": "tendance",
+    "chandeliers": true,
+    "resultats": false,
+    "atr_k": 3.5
+   },
+   "mesures": {
+    "final": 10268.67,
+    "total": 0.02686707186829973,
+    "cagr": 0.006668454705382576,
+    "chute_max": -0.337734752370761,
+    "sharpe": 0.1212823237515755,
+    "calmar": 0.019744650672081355,
+    "annees": {
+     "2021": 0.2556128961172952,
+     "2022": -0.18786206455434185,
+     "2023": -0.07469194184736094,
+     "2024": 0.08828418677697414
+    },
+    "trades": 374,
+    "reussite": 0.34759358288770054,
+    "gain_moyen": 82.69115384615385,
+    "perte_moyenne": -45.06053278688525,
+    "duree_moyenne": 20.56417112299465,
+    "frais": 3066.89,
+    "exposition": 0.7728499846917484
+   }
+  },
+  {
+   "nom": "Momentum 12 mois · chandeliers oui · filtre résultats oui · stop 5.0×ATR",
+   "config": {
+    "famille": "momentum",
+    "chandeliers": true,
+    "resultats": true,
+    "atr_k": 5.0
+   },
+   "mesures": {
+    "final": 10182.43,
+    "total": 0.018243247640724825,
+    "cagr": 0.004542402883950025,
+    "chute_max": -0.2610088379043346,
+    "sharpe": 0.09916842714081697,
+    "calmar": 0.017403253163461516,
+    "annees": {
+     "2021": -0.04589919559317135,
+     "2022": -0.11994392044337054,
+     "2023": 0.02341605223141463,
+     "2024": 0.1849354832784491
+    },
+    "trades": 217,
+    "reussite": 0.3778801843317972,
+    "gain_moyen": 70.54658536585366,
+    "perte_moyenne": -43.56548148148149,
+    "duree_moyenne": 37.10138248847926,
+    "frais": 1268.34,
+    "exposition": 0.5952929280257858
+   }
+  },
+  {
+   "nom": "Tendance + momentum · chandeliers oui · filtre résultats non · stop 3.5×ATR",
+   "config": {
+    "famille": "combine",
+    "chandeliers": true,
+    "resultats": false,
+    "atr_k": 3.5
+   },
+   "mesures": {
+    "final": 10089.62,
+    "total": 0.008962317899599004,
+    "cagr": 0.002239225814113066,
+    "chute_max": -0.32987038968630455,
+    "sharpe": 0.08998093330823799,
+    "calmar": 0.006788198893033392,
+    "annees": {
+     "2021": -0.0720444521786936,
+     "2022": -0.1499341250836681,
+     "2023": 0.012616127730191495,
+     "2024": 0.2631366953697485
+    },
+    "trades": 365,
+    "reussite": 0.3424657534246575,
+    "gain_moyen": 69.47791999999998,
+    "perte_moyenne": -37.80283333333333,
+    "duree_moyenne": 20.947945205479453,
+    "frais": 2626.57,
+    "exposition": 0.7857797224723504
+   }
+  },
+  {
+   "nom": "Tendance MM20/MM200 · chandeliers non · filtre résultats oui · stop 5.0×ATR",
+   "config": {
+    "famille": "tendance",
+    "chandeliers": false,
+    "resultats": true,
+    "atr_k": 5.0
+   },
+   "mesures": {
+    "final": 9932.58,
+    "total": -0.0067422985993150775,
+    "cagr": -0.0016944885670481247,
+    "chute_max": -0.27195097164242676,
+    "sharpe": 0.05963732879903622,
+    "calmar": -0.006230860499649597,
+    "annees": {
+     "2021": 0.13102798115131709,
+     "2022": -0.08403129739522641,
+     "2023": -0.07420471305845588,
+     "2024": 0.03560226491980889
+    },
+    "trades": 197,
+    "reussite": 0.3553299492385787,
+    "gain_moyen": 91.45842857142857,
+    "perte_moyenne": -55.18314960629922,
+    "duree_moyenne": 42.73096446700507,
+    "frais": 1236.96,
+    "exposition": 0.6182105694269138
+   }
+  },
+  {
+   "nom": "Tendance MM20/MM200 · chandeliers non · filtre résultats non · stop 5.0×ATR",
+   "config": {
+    "famille": "tendance",
+    "chandeliers": false,
+    "resultats": false,
+    "atr_k": 5.0
+   },
+   "mesures": {
+    "final": 9886.44,
+    "total": -0.011356415220954985,
+    "cagr": -0.002859091894581667,
+    "chute_max": -0.27962057929959927,
+    "sharpe": 0.052779816534705835,
+    "calmar": -0.010224897973329405,
+    "annees": {
+     "2021": 0.1189273923964933,
+     "2022": -0.10052927781298726,
+     "2023": -0.05024250053965951,
+     "2024": 0.03427989715321722
+    },
+    "trades": 199,
+    "reussite": 0.3165829145728643,
+    "gain_moyen": 101.46285714285715,
+    "perte_moyenne": -53.81955882352941,
+    "duree_moyenne": 42.447236180904525,
+    "frais": 1245.36,
+    "exposition": 0.6294655772114125
+   }
+  },
+  {
+   "nom": "Tendance MM20/MM200 · chandeliers oui · filtre résultats oui · stop 5.0×ATR",
+   "config": {
+    "famille": "tendance",
+    "chandeliers": true,
+    "resultats": true,
+    "atr_k": 5.0
+   },
+   "mesures": {
+    "final": 9848.5,
+    "total": -0.01515040873095097,
+    "cagr": -0.0038197512250078836,
+    "chute_max": -0.28704040693252475,
+    "sharpe": 0.04181081064768696,
+    "calmar": -0.013307364164606279,
+    "annees": {
+     "2021": 0.1438593251538378,
+     "2022": -0.16960776656441334,
+     "2023": -0.029285922042313506,
+     "2024": 0.06812648836887747
+    },
+    "trades": 246,
+    "reussite": 0.3821138211382114,
+    "gain_moyen": 69.85308510638298,
+    "perte_moyenne": -48.35993421052632,
+    "duree_moyenne": 32.88211382113821,
+    "frais": 1697.04,
+    "exposition": 0.6851275622036279
+   }
+  },
+  {
+   "nom": "Momentum 12 mois · chandeliers non · filtre résultats oui · stop 2.5×ATR",
+   "config": {
+    "famille": "momentum",
+    "chandeliers": false,
+    "resultats": true,
+    "atr_k": 2.5
+   },
+   "mesures": {
+    "final": 9471.17,
+    "total": -0.05288346740439287,
+    "cagr": -0.013528235500422148,
+    "chute_max": -0.4209806685538813,
+    "sharpe": 0.03560776821313496,
+    "calmar": -0.032135051585369105,
+    "annees": {
+     "2021": 0.08846297308499262,
+     "2022": -0.1894050235256911,
+     "2023": -0.05421618142304363,
+     "2024": 0.134995057383138
+    },
+    "trades": 496,
+    "reussite": 0.34475806451612906,
+    "gain_moyen": 85.1087134502924,
+    "perte_moyenne": -46.63818461538462,
+    "duree_moyenne": 15.254032258064516,
+    "frais": 3712.45,
+    "exposition": 0.7630243998426063
+   }
+  },
+  {
+   "nom": "Tendance + momentum · chandeliers oui · filtre résultats non · stop 5.0×ATR",
+   "config": {
+    "famille": "combine",
+    "chandeliers": true,
+    "resultats": false,
+    "atr_k": 5.0
+   },
+   "mesures": {
+    "final": 9594.1,
+    "total": -0.04059000536715518,
+    "cagr": -0.010333867750984771,
+    "chute_max": -0.2574859227988071,
+    "sharpe": -0.007967239695601437,
+    "calmar": -0.040133719306509004,
+    "annees": {
+     "2021": -0.0757246775976479,
+     "2022": -0.0692537129075056,
+     "2023": -0.007986874737801797,
+     "2024": 0.12422735870260748
+    },
+    "trades": 251,
+    "reussite": 0.3466135458167331,
+    "gain_moyen": 74.50310344827588,
+    "perte_moyenne": -42.08573170731707,
+    "duree_moyenne": 32.613545816733065,
+    "frais": 1642.85,
+    "exposition": 0.7071809561991179
+   }
+  },
+  {
+   "nom": "Tendance + momentum · chandeliers oui · filtre résultats oui · stop 3.5×ATR",
+   "config": {
+    "famille": "combine",
+    "chandeliers": true,
+    "resultats": true,
+    "atr_k": 3.5
+   },
+   "mesures": {
+    "final": 9319.03,
+    "total": -0.06809692883098617,
+    "cagr": -0.017524648331587733,
+    "chute_max": -0.2617043493372495,
+    "sharpe": -0.04521813375277849,
+    "calmar": -0.06696353490481854,
+    "annees": {
+     "2021": -0.040775406438187,
+     "2022": -0.1025253242666877,
+     "2023": 0.005258479773136537,
+     "2024": 0.07683829024269162
+    },
+    "trades": 371,
+    "reussite": 0.3450134770889488,
+    "gain_moyen": 62.773671875,
+    "perte_moyenne": -38.891728395061726,
+    "duree_moyenne": 20.838274932614556,
+    "frais": 2730.84,
+    "exposition": 0.7829551037024957
+   }
+  },
+  {
+   "nom": "Tendance + momentum · chandeliers oui · filtre résultats oui · stop 5.0×ATR",
+   "config": {
+    "famille": "combine",
+    "chandeliers": true,
+    "resultats": true,
+    "atr_k": 5.0
+   },
+   "mesures": {
+    "final": 9331.96,
+    "total": -0.06680385413631906,
+    "cagr": -0.01718307845906475,
+    "chute_max": -0.2586498425393523,
+    "sharpe": -0.06155586761692644,
+    "calmar": -0.06643374799832104,
+    "annees": {
+     "2021": -0.014629643336698583,
+     "2022": -0.13831673243616316,
+     "2023": -7.253344060931255e-07,
+     "2024": 0.0990718854971353
+    },
+    "trades": 251,
+    "reussite": 0.350597609561753,
+    "gain_moyen": 69.38102272727272,
+    "perte_moyenne": -41.53349693251534,
+    "duree_moyenne": 32.135458167330675,
+    "frais": 1628.85,
+    "exposition": 0.6896053453217522
+   }
+  },
+  {
+   "nom": "Tendance + momentum · chandeliers non · filtre résultats oui · stop 2.5×ATR",
+   "config": {
+    "famille": "combine",
+    "chandeliers": false,
+    "resultats": true,
+    "atr_k": 2.5
+   },
+   "mesures": {
+    "final": 8785.43,
+    "total": -0.12145735378930567,
+    "cagr": -0.03194035998128697,
+    "chute_max": -0.40230874919923065,
+    "sharpe": -0.09093371987391892,
+    "calmar": -0.07939265562795285,
+    "annees": {
+     "2021": -0.027156017340078553,
+     "2022": -0.1389607705612721,
+     "2023": -0.11267259249847139,
+     "2024": 0.18198731614067865
+    },
+    "trades": 470,
+    "reussite": 0.3425531914893617,
+    "gain_moyen": 66.59527950310559,
+    "perte_moyenne": -38.52702265372169,
+    "duree_moyenne": 15.685106382978724,
+    "frais": 3465.91,
+    "exposition": 0.7705919895254467
+   }
+  },
+  {
+   "nom": "Tendance MM20/MM200 · chandeliers oui · filtre résultats oui · stop 3.5×ATR",
+   "config": {
+    "famille": "tendance",
+    "chandeliers": true,
+    "resultats": true,
+    "atr_k": 3.5
+   },
+   "mesures": {
+    "final": 8560.44,
+    "total": -0.14395632121427027,
+    "cagr": -0.03821577339957316,
+    "chute_max": -0.36630346019966464,
+    "sharpe": -0.18448969745020335,
+    "calmar": -0.10432818018902282,
+    "annees": {
+     "2021": 0.1602465996140714,
+     "2022": -0.18609796384321609,
+     "2023": -0.0924403997534351,
+     "2024": -0.0011544702878535373
+    },
+    "trades": 390,
+    "reussite": 0.34102564102564104,
+    "gain_moyen": 65.18308270676692,
+    "perte_moyenne": -40.5339299610895,
+    "duree_moyenne": 19.894871794871793,
+    "frais": 3014.6,
+    "exposition": 0.7720624864907711
+   }
+  },
+  {
+   "nom": "Tendance MM20/MM200 · chandeliers non · filtre résultats oui · stop 3.5×ATR",
+   "config": {
+    "famille": "tendance",
+    "chandeliers": false,
+    "resultats": true,
+    "atr_k": 3.5
+   },
+   "mesures": {
+    "final": 8058.77,
+    "total": -0.19412304932639857,
+    "cagr": -0.0526665945590169,
+    "chute_max": -0.4000712544021585,
+    "sharpe": -0.22033590028098432,
+    "calmar": -0.1316430360329651,
+    "annees": {
+     "2021": 0.026555914131410452,
+     "2022": -0.1188674762505264,
+     "2023": -0.10267737193380855,
+     "2024": -0.007121118089453926
+    },
+    "trades": 312,
+    "reussite": 0.3141025641025641,
+    "gain_moyen": 91.64520408163264,
+    "perte_moyenne": -50.7607476635514,
+    "duree_moyenne": 25.641025641025642,
+    "frais": 2253.74,
+    "exposition": 0.7550433026581959
+   }
+  },
+  {
+   "nom": "Tendance + momentum · chandeliers non · filtre résultats non · stop 2.5×ATR",
+   "config": {
+    "famille": "combine",
+    "chandeliers": false,
+    "resultats": false,
+    "atr_k": 2.5
+   },
+   "mesures": {
+    "final": 7793.08,
+    "total": -0.2206922069821149,
+    "cagr": -0.0605948642182651,
+    "chute_max": -0.41644509199644497,
+    "sharpe": -0.25017434607705064,
+    "calmar": -0.14550505068452668,
+    "annees": {
+     "2021": -0.035135408962927994,
+     "2022": -0.09527152707794362,
+     "2023": -0.14111692479024185,
+     "2024": 0.03941827252527896
+    },
+    "trades": 477,
+    "reussite": 0.32914046121593293,
+    "gain_moyen": 70.29662420382166,
+    "perte_moyenne": -41.0715,
+    "duree_moyenne": 15.29769392033543,
+    "frais": 3475.47,
+    "exposition": 0.7735616891082467
+   }
+  },
+  {
+   "nom": "Tendance MM20/MM200 · chandeliers non · filtre résultats oui · stop 2.5×ATR",
+   "config": {
+    "famille": "tendance",
+    "chandeliers": false,
+    "resultats": true,
+    "atr_k": 2.5
+   },
+   "mesures": {
+    "final": 6300.65,
+    "total": -0.369935442570402,
+    "cagr": -0.10934692401133106,
+    "chute_max": -0.5100271874614108,
+    "sharpe": -0.554426135773892,
+    "calmar": -0.21439430426364153,
+    "annees": {
+     "2021": 0.009399883066502523,
+     "2022": -0.1984045263023877,
+     "2023": -0.13183060073577146,
+     "2024": -0.10306273104364738
+    },
+    "trades": 487,
+    "reussite": 0.3162217659137577,
+    "gain_moyen": 62.87629870129871,
+    "perte_moyenne": -40.233963963963966,
+    "duree_moyenne": 14.848049281314168,
+    "frais": 3562.62,
+    "exposition": 0.7656560144832788
+   }
+  },
+  {
+   "nom": "Tendance MM20/MM200 · chandeliers non · filtre résultats non · stop 2.5×ATR",
+   "config": {
+    "famille": "tendance",
+    "chandeliers": false,
+    "resultats": false,
+    "atr_k": 2.5
+   },
+   "mesures": {
+    "final": 6054.11,
+    "total": -0.3945887668756515,
+    "cagr": -0.11821434206115322,
+    "chute_max": -0.5053794598703774,
+    "sharpe": -0.6003456383809627,
+    "calmar": -0.23391204322287557,
+    "annees": {
+     "2021": -0.016148796166236545,
+     "2022": -0.16810630708095664,
+     "2023": -0.15587720491545642,
+     "2024": -0.12371052900104018
+    },
+    "trades": 494,
+    "reussite": 0.3340080971659919,
+    "gain_moyen": 57.027575757575754,
+    "perte_moyenne": -40.464741641337376,
+    "duree_moyenne": 14.7165991902834,
+    "frais": 3570.62,
+    "exposition": 0.7606286529292261
+   }
+  },
+  {
+   "nom": "Tendance MM20/MM200 · chandeliers oui · filtre résultats non · stop 2.5×ATR",
+   "config": {
+    "famille": "tendance",
+    "chandeliers": true,
+    "resultats": false,
+    "atr_k": 2.5
+   },
+   "mesures": {
+    "final": 6514.61,
+    "total": -0.34853948846773475,
+    "cagr": -0.10185948538578415,
+    "chute_max": -0.44531858616558484,
+    "sharpe": -0.6256123317333073,
+    "calmar": -0.2287339638411348,
+    "annees": {
+     "2021": -0.06147297441333577,
+     "2022": -0.19110189830722013,
+     "2023": -0.07968208561450885,
+     "2024": -0.0675842068770246
+    },
+    "trades": 552,
+    "reussite": 0.322463768115942,
+    "gain_moyen": 51.16544943820225,
+    "perte_moyenne": -33.39692513368984,
+    "duree_moyenne": 12.469202898550725,
+    "frais": 4060.34,
+    "exposition": 0.7630308091587853
+   }
+  },
+  {
+   "nom": "Tendance MM20/MM200 · chandeliers oui · filtre résultats oui · stop 2.5×ATR",
+   "config": {
+    "famille": "tendance",
+    "chandeliers": true,
+    "resultats": true,
+    "atr_k": 2.5
+   },
+   "mesures": {
+    "final": 6325.56,
+    "total": -0.36744449468795715,
+    "cagr": -0.10846551687261619,
+    "chute_max": -0.46738772172025633,
+    "sharpe": -0.6867401451410217,
+    "calmar": -0.23206753586380177,
+    "annees": {
+     "2021": 0.04177938869793363,
+     "2022": -0.18555265706756696,
+     "2023": -0.15719588274636764,
+     "2024": -0.11542793577330768
+    },
+    "trades": 533,
+    "reussite": 0.3151969981238274,
+    "gain_moyen": 52.106547619047625,
+    "perte_moyenne": -33.82202739726028,
+    "duree_moyenne": 12.9906191369606,
+    "frais": 4039.6,
+    "exposition": 0.763719831903962
+   }
+  },
+  {
+   "nom": "Tendance + momentum · chandeliers oui · filtre résultats oui · stop 2.5×ATR",
+   "config": {
+    "famille": "combine",
+    "chandeliers": true,
+    "resultats": true,
+    "atr_k": 2.5
+   },
+   "mesures": {
+    "final": 6088.31,
+    "total": -0.39116855883954804,
+    "cagr": -0.1169681683670637,
+    "chute_max": -0.4652400557316646,
+    "sharpe": -0.7472827047492346,
+    "calmar": -0.2514146555655284,
+    "annees": {
+     "2021": -0.12315970829665457,
+     "2022": -0.17320324111633267,
+     "2023": -0.14764847624098476,
+     "2024": -0.014721362048452313
+    },
+    "trades": 559,
+    "reussite": 0.3076923076923077,
+    "gain_moyen": 46.380581395348834,
+    "perte_moyenne": -30.534470284237727,
+    "duree_moyenne": 11.846153846153847,
+    "frais": 3897.32,
+    "exposition": 0.7612553320496809
+   }
+  },
+  {
+   "nom": "Tendance + momentum · chandeliers oui · filtre résultats non · stop 2.5×ATR",
+   "config": {
+    "famille": "combine",
+    "chandeliers": true,
+    "resultats": false,
+    "atr_k": 2.5
+   },
+   "mesures": {
+    "final": 5877.72,
+    "total": -0.41222804572391025,
+    "cagr": -0.12472643254656568,
+    "chute_max": -0.4989974837057112,
+    "sharpe": -0.7856120415966679,
+    "calmar": -0.24995403107107522,
+    "annees": {
+     "2021": -0.1753154541389711,
+     "2022": -0.17879865061447486,
+     "2023": -0.06958739120827606,
+     "2024": -0.06718448260924781
+    },
+    "trades": 576,
+    "reussite": 0.3125,
+    "gain_moyen": 44.12083333333333,
+    "perte_moyenne": -30.31967171717172,
+    "duree_moyenne": 11.859375,
+    "frais": 3822.06,
+    "exposition": 0.765373067977449
+   }
+  }
+ ]
+}
