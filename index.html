@@ -102,7 +102,7 @@ th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white
 th{font-weight:600;color:var(--muted);font-size:.82rem}
 td.num,th.num{text-align:right}
 .pos{color:var(--buy);font-weight:600}.neg{color:var(--sell);font-weight:600}
-.form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:10px;align-items:end;margin-bottom:14px}
+.form{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) auto;gap:10px;align-items:end;margin-bottom:10px}
 @media (max-width:700px){.form{grid-template-columns:1fr 1fr}}
 .settings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 @media (max-width:700px){.settings{grid-template-columns:1fr 1fr}}
@@ -151,6 +151,17 @@ footer{margin-top:32px;font-size:.82rem;color:var(--muted);max-width:75ch}
 }
 body[data-tab="portefeuille"] .layout,body[data-tab="reglages"] .layout{grid-template-columns:minmax(0,1fr)}
 body[data-tab="portefeuille"] .layout .detail,body[data-tab="reglages"] .layout .detail{display:none}
+button.pill{border:0;cursor:pointer;font:inherit;font-weight:800;font-size:.9rem;display:inline-flex;align-items:center;gap:6px}
+button.pill::after{content:"›";font-size:1.1em;line-height:1}
+button.pill:hover{filter:brightness(.96);box-shadow:inset 0 0 0 1px currentColor}
+.order-main{all:unset;cursor:pointer;min-width:0;display:block}
+.order-main:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+select{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+.hint{font-size:.85rem;color:var(--wait);background:var(--wait-bg);border-radius:8px;padding:8px 12px;margin:0 0 12px}
+.hint[hidden]{display:none}
+.form.vente{background:var(--sell-bg);border-radius:10px;padding:10px}
+.form.achat-pre{background:var(--buy-bg);border-radius:10px;padding:10px}
+.actbar{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
 /* fiche détail (mobile) */
 .sheet{position:fixed;inset:0;z-index:30;background:rgba(10,18,30,.45);display:flex;align-items:flex-end}
 .sheet[hidden]{display:none}
@@ -211,14 +222,18 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
             <span class="muted small">Ajoutez chaque achat réalisé : l’appli en déduit les ventes et les places libres.</span>
           </div>
           <form class="form" id="posForm" autocomplete="off">
+            <label>Opération<select id="pOp"><option value="achat">Achat</option><option value="vente">Vente</option></select></label>
             <label>Action<input id="pTicker" list="tickers" required placeholder="ex. NVDA"></label>
-            <label>Prix d’achat ($)<input id="pPrice" type="number" step="0.01" min="0" required></label>
+            <label><span id="pPriceLabel">Prix d’achat ($)</span><input id="pPrice" type="number" step="0.01" min="0" required></label>
             <label>Quantité<input id="pQty" type="number" step="any" min="0" required></label>
-            <label>Date d’achat<input id="pDate" type="date"></label>
-            <button class="primary" type="submit">Ajouter la ligne</button>
+            <label>Date<input id="pDate" type="date"></label>
+            <button class="primary" type="submit" id="pSubmit">Enregistrer l’achat</button>
             <datalist id="tickers"></datalist>
           </form>
+          <p class="hint" id="pHint" hidden></p>
           <div class="tablewrap" id="portfolio"></div>
+          <div class="sub" style="margin-top:22px">Ventes réalisées</div>
+          <div class="tablewrap" id="ventes"></div>
         </div>
       </section>
 
@@ -279,7 +294,7 @@ var LS={
 var DEFAULTS={capital:10000,lignes:10,fx:1.15};
 var S={data:null,results:[],byTicker:{},ranked:[],plan:null,selected:null,checkedAt:null,
   settings:Object.assign({},DEFAULTS,LS.get("mm.pur.settings",{})),
-  portfolio:LS.get("mm.portfolio",[])};
+  portfolio:LS.get("mm.portfolio",[]),ventes:LS.get("mm.ventes",[])};
 var $=function(id){return document.getElementById(id)};
 var fmt=function(v,d){return v==null||isNaN(v)?"–":v.toLocaleString("fr-FR",{minimumFractionDigits:d==null?2:d,maximumFractionDigits:d==null?2:d})};
 var pct=function(v){return v==null||isNaN(v)?"–":(v>=0?"+":"")+fmt(v*100,1)+" %"};
@@ -367,8 +382,9 @@ function renderStatus(){
   $("status").textContent="Cours de clôture du "+dateFR(last)+chk;
 }
 function orderRow(kind,label,r,t,qtyHtml,why){
-  return '<div class="order" role="button" tabindex="0" data-t="'+esc(t)+'"><span class="pill '+kind+'">'+label+'</span>'+
-    '<div><div><span class="tick">'+esc(t)+'</span> <span class="name">'+esc(r?r.n:"")+'</span></div><div class="why">'+esc(why)+'</div></div>'+
+  var act=kind==="buy"?"achat":"vente";
+  return '<div class="order" data-t="'+esc(t)+'"><button class="pill '+kind+'" data-act="'+act+'" data-t="'+esc(t)+'" aria-label="'+label+' '+esc(t)+' : enregistrer dans le portefeuille">'+label+'</button>'+
+    '<button class="order-main" data-t="'+esc(t)+'" aria-label="Voir le détail de '+esc(t)+'"><div><span class="tick">'+esc(t)+'</span> <span class="name">'+esc(r?r.n:"")+'</span></div><div class="why">'+esc(why)+'</div></button>'+
     '<div class="qty">'+qtyHtml+'</div></div>';
 }
 function renderOrders(){
@@ -443,6 +459,8 @@ function renderDetail(){
     '<div class="chart">'+chartSVG(r)+'</div>'+
     '<div class="legend"><span><i style="background:var(--price)"></i>Cours</span><span><i style="background:var(--mm20)"></i>MM20</span><span><i style="background:var(--mm200)"></i>MM200</span></div>'+
     '<ul class="reasons">'+why.map(function(w){return"<li>"+esc(w)+"</li>"}).join("")+'</ul>'+
+    (st.k==="buy"?'<div class="actbar"><button class="pill buy" data-act="achat" data-t="'+esc(r.t)+'">Acheter</button></div>':
+     st.k==="sell"?'<div class="actbar"><button class="pill sell" data-act="vente" data-t="'+esc(r.t)+'">Vendre</button></div>':"")+
     '<p class="info" style="margin-top:10px">Momentum 12 mois (information) : '+pct(r.mom)+'</p>';
 }
 function renderPortfolio(){
@@ -457,14 +475,33 @@ function renderPortfolio(){
       '<td class="num '+(perf>=0?"pos":"neg")+'">'+pct(perf)+'</td><td class="num">'+fmt(val)+'</td>'+
       '<td class="num">'+(r?fmt(r.ratio,3):"–")+'</td><td class="num info">'+(r?pct(r.mom):"–")+'</td>'+
       '<td>'+(st?'<span class="pill '+st.k+'">'+st.l+'</span>':"–")+'</td>'+
-      '<td><button class="linkbtn" data-del="'+i+'" aria-label="Supprimer '+esc(t)+'">Supprimer</button></td></tr>';
+      '<td><button class="linkbtn" style="color:var(--ink);margin-right:12px" data-act="vente" data-t="'+esc(t)+'">Vendre</button><button class="linkbtn" data-del="'+i+'" aria-label="Supprimer '+esc(t)+' (erreur de saisie)">Supprimer</button></td></tr>';
   }).join("");
   var tp=cost?tot/cost-1:null;
   el.innerHTML='<table><thead><tr><th>Action</th><th class="num">Qté</th><th class="num">Prix d’achat ($)</th><th class="num">Cours ($)</th><th class="num">+/-</th><th class="num">Valeur ($)</th><th class="num">Ratio</th><th class="num">Momentum 12 m</th><th>Signal</th><th></th></tr></thead><tbody>'+rows+
     '</tbody><tfoot><tr><td colspan="4"><strong>Total</strong></td><td class="num '+(tp>=0?"pos":"neg")+'">'+pct(tp)+'</td><td class="num"><strong>'+fmt(tot)+'</strong></td><td colspan="4"></td></tr></tfoot></table>';
 }
+function renderVentes(){
+  var el=$("ventes");
+  if(!S.ventes.length){el.innerHTML='<p class="small muted">Aucune vente enregistrée.</p>';return}
+  var tot=0;
+  var rows=S.ventes.slice().reverse().map(function(v,j){
+    var i=S.ventes.length-1-j;tot+=v.res;
+    return'<tr><td>'+esc(v.d?new Date(v.d+"T12:00:00").toLocaleDateString("fr-FR"):"–")+'</td><td><strong>'+esc(v.t)+'</strong></td>'+
+      '<td class="num">'+fmt(v.q,v.q%1?2:0)+'</td><td class="num">'+fmt(v.pa)+'</td><td class="num">'+fmt(v.pv)+'</td>'+
+      '<td class="num '+(v.res>=0?"pos":"neg")+'">'+(v.res>=0?"+":"")+fmt(v.res)+'</td><td class="num '+(v.res>=0?"pos":"neg")+'">'+pct(v.pv/v.pa-1)+'</td>'+
+      '<td><button class="linkbtn" data-delv="'+i+'">Supprimer</button></td></tr>';
+  }).join("");
+  el.innerHTML='<table><thead><tr><th>Date</th><th>Action</th><th class="num">Qté</th><th class="num">Prix d’achat moyen ($)</th><th class="num">Prix de vente ($)</th><th class="num">Résultat ($)</th><th class="num">%</th><th></th></tr></thead><tbody>'+rows+
+    '</tbody><tfoot><tr><td colspan="5"><strong>Total réalisé</strong> <span class="info">(hors frais)</span></td><td class="num '+(tot>=0?"pos":"neg")+'"><strong>'+(tot>=0?"+":"")+fmt(tot)+'</strong></td><td colspan="2"></td></tr></tfoot></table>';
+}
+$("ventes").addEventListener("click",function(e){
+  var d=e.target.closest("[data-delv]");if(!d)return;
+  if(!confirm("Supprimer cette vente de l’historique ? Les actions ne seront pas remises dans le portefeuille."))return;
+  S.ventes.splice(+d.getAttribute("data-delv"),1);LS.set("mm.ventes",S.ventes);renderVentes();
+});
 function renderDatalist(){$("tickers").innerHTML=S.results.map(function(r){return'<option value="'+esc(r.t)+'">'+esc(r.n)+'</option>'}).join("")}
-function renderAll(){if(S.data)computePlan();renderStatus();renderOrders();renderBoard();renderDetail();renderPortfolio();renderDatalist();renderBadge()}
+function renderAll(){if(S.data)computePlan();renderStatus();renderOrders();renderBoard();renderDetail();renderPortfolio();renderVentes();renderDatalist();renderBadge()}
 
 /* ---------- événements ---------- */
 $("btnUpdate").onclick=function(){update(false)};
@@ -507,7 +544,7 @@ function renderBadge(){
 
 /* ---------- sauvegarde ---------- */
 $("btnExport").onclick=function(){
-  var txt=JSON.stringify({v:1,portfolio:S.portfolio,settings:S.settings});
+  var txt=JSON.stringify({v:1,portfolio:S.portfolio,ventes:S.ventes,settings:S.settings});
   var done=function(){showBanner("Sauvegarde copiée. Collez-la dans une note ou un e-mail pour la garder.",true)};
   var fallback=function(){var ta=$("backupText");ta.value=txt;ta.focus();ta.select();showBanner("Copiez le texte sélectionné dans le cadre ci-dessous.",true)};
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,fallback)}else fallback();
@@ -520,6 +557,7 @@ $("btnImport").onclick=function(){
     if(!ok)throw 0;
     if(S.portfolio.length&&!confirm("Remplacer votre portefeuille actuel ("+S.portfolio.length+" lignes) par la sauvegarde ?"))return;
     S.portfolio=o.portfolio;LS.set("mm.portfolio",S.portfolio);
+    if(Array.isArray(o.ventes)){S.ventes=o.ventes;LS.set("mm.ventes",S.ventes)}
     if(o.settings){S.settings=Object.assign({},DEFAULTS,o.settings);LS.set("mm.pur.settings",S.settings);["capital","lignes","fx"].forEach(function(k){$({capital:"sCapital",lignes:"sLignes",fx:"sFx"}[k]).value=S.settings[k]})}
     $("backupText").value="";renderAll();showBanner("Sauvegarde restaurée : "+S.portfolio.length+" lignes.",true);
   }catch(e){showBanner("Ce texte n’est pas une sauvegarde valide de l’appli.",false,true)}
@@ -528,15 +566,70 @@ function bindList(id,sel){
   $(id).addEventListener("click",function(e){var n=e.target.closest(sel);if(n)select(n.getAttribute("data-t"))});
   $(id).addEventListener("keydown",function(e){var n=e.target.closest(sel);if(n&&(e.key==="Enter"||e.key===" ")){e.preventDefault();select(n.getAttribute("data-t"))}});
 }
-bindList("board",".row");bindList("orders",".order");
+bindList("board",".row");
+$("orders").addEventListener("click",function(e){
+  var a=e.target.closest("[data-act]");if(a){prefill(a.getAttribute("data-act"),a.getAttribute("data-t"));return}
+  var n=e.target.closest(".order");if(n)select(n.getAttribute("data-t"));
+});
+["detail","sheetBody"].forEach(function(id){$(id).addEventListener("click",function(e){
+  var a=e.target.closest("[data-act]");if(!a)return;
+  if(!$("sheet").hidden)closeSheet();
+  prefill(a.getAttribute("data-act"),a.getAttribute("data-t"));
+})});
+
+/* ---------- formulaire pré-rempli ---------- */
+function heldQty(t){return S.portfolio.filter(function(o){return o.t.toUpperCase()===t}).reduce(function(a,o){return a+o.q},0)}
+function today(){var d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
+function setOp(op,pre){
+  $("pOp").value=op;
+  $("pPriceLabel").textContent=op==="vente"?"Prix de vente ($)":"Prix d’achat ($)";
+  $("pSubmit").textContent=op==="vente"?"Enregistrer la vente":"Enregistrer l’achat";
+  $("posForm").className="form"+(op==="vente"?" vente":pre?" achat-pre":"");
+}
+function prefill(op,t){
+  t=String(t).toUpperCase();
+  var r=S.byTicker[t];
+  showTab("portefeuille");
+  setOp(op,true);
+  $("pTicker").value=t;
+  $("pPrice").value=r?r.price.toFixed(2):"";
+  var q=op==="vente"?heldQty(t):((S.plan&&S.plan.buys.filter(function(b){return b.t.toUpperCase()===t})[0])||{}).qty||"";
+  $("pQty").value=q||"";
+  $("pDate").value=today();
+  $("pHint").hidden=false;
+  $("pHint").textContent=op==="vente"
+    ?"Vente pré-remplie avec toute la ligne et la dernière clôture"+(r?" ("+fmt(r.price)+" $)":"")+". Remplacez le prix par celui réellement obtenu, puis enregistrez."
+    :"Achat pré-rempli avec la quantité proposée et la dernière clôture ("+(r?fmt(r.price)+" $":"–")+"). Remplacez le prix par celui réellement payé, puis enregistrez.";
+  $("posForm").scrollIntoView({behavior:"smooth",block:"start"});
+  setTimeout(function(){$("pPrice").focus();$("pPrice").select()},300);
+}
+$("pOp").addEventListener("change",function(){setOp($("pOp").value,false)});
 $("posForm").addEventListener("submit",function(e){
   e.preventDefault();
-  var t=$("pTicker").value.trim().toUpperCase().replace(".","-"),pr=parseFloat($("pPrice").value),q=parseFloat($("pQty").value);
+  var t=$("pTicker").value.trim().toUpperCase().replace(".","-"),pr=parseFloat($("pPrice").value),q=parseFloat($("pQty").value),d=$("pDate").value||today();
   if(!t||!(pr>0)||!(q>0))return;
-  S.portfolio.push({t:t,price:pr,q:q,d:$("pDate").value||null});LS.set("mm.portfolio",S.portfolio);
-  $("posForm").reset();renderAll();
+  if($("pOp").value==="vente"){
+    var dispo=heldQty(t);
+    if(dispo<=0){showBanner("Vous ne détenez pas "+t+" dans le portefeuille.",false,true);return}
+    if(q>dispo+1e-9){showBanner("Vous ne détenez que "+fmt(dispo,dispo%1?2:0)+" "+t+".",false,true);return}
+    var reste=q,cout=0,garde=[];
+    S.portfolio.forEach(function(o){   /* premier acheté, premier vendu */
+      if(o.t.toUpperCase()!==t||reste<=1e-9){garde.push(o);return}
+      var pris=Math.min(o.q,reste);cout+=pris*o.price;reste-=pris;
+      if(o.q-pris>1e-9)garde.push(Object.assign({},o,{q:o.q-pris}));
+    });
+    var res=q*pr-cout;
+    S.portfolio=garde;S.ventes.push({t:t,q:q,pa:cout/q,pv:pr,d:d,res:res});
+    LS.set("mm.portfolio",S.portfolio);LS.set("mm.ventes",S.ventes);
+    showBanner("Vente enregistrée : "+t+", résultat "+(res>=0?"+":"")+fmt(res)+" $.",true);
+  }else{
+    S.portfolio.push({t:t,price:pr,q:q,d:d});LS.set("mm.portfolio",S.portfolio);
+    showBanner("Achat enregistré : "+fmt(q,q%1?2:0)+" "+t+" à "+fmt(pr)+" $.",true);
+  }
+  $("posForm").reset();setOp("achat",false);$("pHint").hidden=true;renderAll();
 });
 $("portfolio").addEventListener("click",function(e){
+  var a=e.target.closest("[data-act]");if(a){prefill(a.getAttribute("data-act"),a.getAttribute("data-t"));return}
   var d=e.target.closest("[data-del]"),s=e.target.closest("[data-sel]");
   if(d){S.portfolio.splice(+d.getAttribute("data-del"),1);LS.set("mm.portfolio",S.portfolio);renderAll()}
   if(s)select(s.getAttribute("data-sel"));
