@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Signaux MM20/MM200</title>
+<meta name="theme-color" content="#13233A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Signaux">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF1F5; --surface:#FFFFFF; --ink:#13233A; --muted:#5B6B80; --line:#D5DCE5;
+  --buy:#12795A; --buy-bg:#E2F3EC; --sell:#B42318; --sell-bg:#FBE6E4; --wait:#8A5D00; --wait-bg:#FBF0D6;
+  --mm20:#2D5BA8; --mm200:#9AA4B5; --price:#13233A; --focus:#2D5BA8;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1722; --surface:#172131; --ink:#E6ECF3; --muted:#93A3B8; --line:#26344A;
+    --buy:#3CC48F; --buy-bg:#11342A; --sell:#F07167; --sell-bg:#3A1A1A; --wait:#E3B341; --wait-bg:#3A2E10;
+    --mm20:#7FA7F0; --mm200:#5E6B80; --price:#E6ECF3; --focus:#7FA7F0; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1722; --surface:#172131; --ink:#E6ECF3; --muted:#93A3B8; --line:#26344A;
+  --buy:#3CC48F; --buy-bg:#11342A; --sell:#F07167; --sell-bg:#3A1A1A; --wait:#E3B341; --wait-bg:#3A2E10;
+  --mm20:#7FA7F0; --mm200:#5E6B80; --price:#E6ECF3; --focus:#7FA7F0; color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 20px 48px}
+h1{font-size:clamp(1.6rem,3.2vw,2.3rem);font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.1}
+h2{font-size:1.15rem;font-weight:700;margin:0 0 4px}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;font-weight:600}
+button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:disabled{opacity:.6;cursor:progress}
+#btnUpdate{padding:10px 22px;font-size:1rem}
+button:hover{border-color:var(--muted)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+input{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted);font-weight:500}
+
+header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;padding-bottom:18px;border-bottom:2px solid var(--ink)}
+.status{margin-top:6px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.banner{margin-top:14px;padding:10px 14px;border-radius:8px;background:var(--wait-bg);color:var(--wait);font-weight:600;font-size:.9rem}
+.banner.err{background:var(--sell-bg);color:var(--sell)}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;margin-top:24px}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:520px){.wrap{padding:16px 12px 40px}.panel{padding:14px 12px}.pill{min-width:0;padding:6px 10px;font-size:.85rem}.row{gap:8px;padding:12px 4px}.name{display:none}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+
+.board{list-style:none;margin:0;padding:0}
+.row{display:grid;grid-template-columns:2rem minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 8px;border-top:1px solid var(--line);cursor:pointer;border-radius:8px}
+.row:first-child{border-top:0}
+.row:hover{background:var(--bg)}
+.row[aria-selected="true"]{background:var(--bg);box-shadow:inset 3px 0 0 var(--ink)}
+.rank{font-weight:800;font-size:1.1rem;color:var(--muted);text-align:right}
+.tick{font-weight:800;font-size:1.05rem}
+.name{color:var(--muted);font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meter{height:6px;background:var(--line);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter span{display:block;height:100%;background:var(--mm20)}
+.ratio{font-size:.8rem;color:var(--muted);margin-top:3px}
+.pill{display:inline-block;min-width:6.5rem;text-align:center;padding:6px 12px;border-radius:999px;font-weight:800;font-size:.9rem}
+.pill.buy{background:var(--buy-bg);color:var(--buy)}
+.pill.sell{background:var(--sell-bg);color:var(--sell)}
+.pill.wait{background:var(--wait-bg);color:var(--wait)}
+.pill.hold{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+
+.detail .big{font-size:2rem;font-weight:800;letter-spacing:-.02em}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.kv div{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.kv b{display:block;font-size:1.05rem}
+.kv span{font-size:.8rem;color:var(--muted)}
+.chart{overflow-x:auto}
+.chart svg{width:100%;min-width:420px;height:auto;display:block}
+.legend{display:flex;gap:16px;font-size:.82rem;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.reasons{margin:12px 0 0;padding-left:18px}
+.reasons li{margin:3px 0}
+
+section.block{margin-top:28px}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:600;color:var(--muted);font-size:.82rem}
+td.num,th.num{text-align:right}
+.pos{color:var(--buy);font-weight:600}.neg{color:var(--sell);font-weight:600}
+.form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:10px;align-items:end;margin-bottom:14px}
+@media (max-width:700px){.form{grid-template-columns:1fr 1fr}}
+.settings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:700px){.settings{grid-template-columns:1fr 1fr}}
+.rules{margin-top:14px;font-size:.88rem;color:var(--muted)}
+.rules p{margin-top:6px}
+.empty{padding:24px 8px;color:var(--muted)}
+footer{margin-top:32px;font-size:.82rem;color:var(--muted);max-width:75ch}
+.linkbtn{background:none;border:0;padding:0;color:var(--sell);font-weight:600}
+@media (prefers-reduced-motion:no-preference){.row{transition:background .12s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Signaux MM20/MM200</h1>
+      <p class="status muted" id="status">Aucune donnée chargée.</p>
+    </div>
+    <div class="actions">
+      <button class="primary" id="btnUpdate">Mise à jour</button>
+    </div>
+  </header>
+  <div id="banner"></div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Les 10 meilleures tendances</h2>
+        <span class="muted small" id="universe"></span>
+      </div>
+      <ol class="board" id="board" role="listbox" aria-label="Top 10 par ratio MM20/MM200"></ol>
+    </div>
+    <div class="panel detail" id="detail" aria-live="polite">
+      <p class="empty">Appuyez sur « Mise à jour » : le classement des 500 actions et les signaux s’affichent ici.</p>
+    </div>
+  </div>
+
+  <section class="block panel">
+    <div class="panel-head">
+      <h2>Mon portefeuille</h2>
+      <span class="muted small">Les signaux de vente s’appliquent aux lignes que vous détenez.</span>
+    </div>
+    <form class="form" id="posForm" autocomplete="off">
+      <label>Action<input id="pTicker" list="tickers" required placeholder="ex. AAPL"></label>
+      <label>Prix d’achat<input id="pPrice" type="number" step="0.01" min="0" required></label>
+      <label>Quantité<input id="pQty" type="number" step="any" min="0" required></label>
+      <label>Date d’achat<input id="pDate" type="date"></label>
+      <button class="primary" type="submit">Ajouter la ligne</button>
+      <datalist id="tickers"></datalist>
+    </form>
+    <div class="tablewrap" id="portfolio"></div>
+  </section>
+
+  <section class="block panel">
+    <div class="panel-head"><h2>Réglages des signaux</h2></div>
+    <div class="settings">
+      <label>Surextension max. au-dessus de la MM20 (%)<input type="number" id="sSurext" step="0.5" min="0"></label>
+      <label>Sortie sous la MM20 (%)<input type="number" id="sSortie" step="0.5" min="0"></label>
+      <label>Stop-loss sous le prix d’achat (%)<input type="number" id="sStop" step="0.5" min="0"></label>
+      <label>Croisement « récent » (jours)<input type="number" id="sWindow" step="1" min="1"></label>
+    </div>
+    <div class="rules">
+      <p><strong>Classement :</strong> ratio MM20 / MM200 du dernier jour, du plus élevé au plus faible, sur toutes les actions disposant d’au moins 200 séances.</p>
+      <p><strong>Acheter</strong> quand la MM20 est au-dessus de la MM200, que le cours est au-dessus de la MM20 sans la dépasser de plus que le seuil de surextension.</p>
+      <p><strong>Attendre</strong> si le cours est trop étiré au-dessus de la MM20 (attendre un repli) ou repassé sous la MM20.</p>
+      <p><strong>Vendre</strong> (lignes détenues) si le stop-loss est touché, si la MM20 repasse sous la MM200 (croisement baissier) ou si le cours casse la MM20 au-delà du seuil de sortie.</p>
+    </div>
+  </section>
+
+  <footer>
+    Outil d’aide à la décision basé uniquement sur des moyennes mobiles : il ne tient compte ni des résultats des entreprises, ni de l’actualité, ni des frais. Ce n’est pas un conseil en investissement. Les cours sont mis à jour automatiquement chaque soir de bourse ; votre portefeuille reste uniquement sur cet appareil.
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+var LS = {
+  get:function(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},
+  del:function(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+var DEFAULTS={surext:8,sortie:3,stop:8,window:10};
+var S={
+  data:null, results:[], top:[], byTicker:{}, selected:null,
+  settings:Object.assign({},DEFAULTS,LS.get("mm.settings",{})),
+  portfolio:LS.get("mm.portfolio",[])
+};
+var $=function(id){return document.getElementById(id)};
+var fmt=function(v,d){return v==null||isNaN(v)?"–":v.toLocaleString("fr-FR",{minimumFractionDigits:d==null?2:d,maximumFractionDigits:d==null?2:d})};
+var pct=function(v){return v==null||isNaN(v)?"–":(v>=0?"+":"")+fmt(v*100,1)+" %"};
+var esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
+
+/* ---------- calculs ---------- */
+function ffill(arr){
+  var out=[],last=null,start=-1;
+  for(var i=0;i<arr.length;i++){
+    var v=arr[i];
+    if(v!=null&&isFinite(v)&&v>0){last=v;if(start<0)start=i}
+    out.push(last);
+  }
+  return {values:out,start:start};
+}
+function sma(vals,n){
+  var out=new Array(vals.length).fill(null),sum=0,count=0;
+  for(var i=0;i<vals.length;i++){
+    if(vals[i]==null){sum=0;count=0;continue}
+    sum+=vals[i];count++;
+    if(count>n){sum-=vals[i-n];count=n}
+    if(count===n)out[i]=sum/n;
+  }
+  return out;
+}
+function analyse(t,serie,dates){
+  var f=ffill(serie.c);
+  if(f.start<0)return null;
+  var closes=f.values.slice(f.start), d=dates.slice(f.start);
+  if(closes.length<200)return null;
+  var m20=sma(closes,20), m200=sma(closes,200), L=closes.length-1;
+  if(m200[L]==null)return null;
+  var crossIdx=-1, crossType=null;
+  for(var i=L;i>0;i--){
+    if(m200[i-1]==null)break;
+    var a=m20[i]-m200[i], b=m20[i-1]-m200[i-1];
+    if((a>0)!==(b>0)){crossIdx=i;crossType=a>0?"haussier":"baissier";break}
+  }
+  return {
+    t:t, n:serie.n||t, s:serie.s||"", closes:closes, dates:d, m20:m20, m200:m200,
+    price:closes[L], ma20:m20[L], ma200:m200[L], ratio:m20[L]/m200[L],
+    ecart:closes[L]/m20[L]-1, crossType:crossType,
+    crossAgo:crossIdx<0?null:L-crossIdx, crossDate:crossIdx<0?null:d[crossIdx],
+    change20:closes[L]/closes[Math.max(0,L-20)]-1
+  };
+}
+function entrySignal(r){
+  var st=S.settings, why=[];
+  if(r.ma20<=r.ma200){why.push("La MM20 est sous la MM200 : tendance baissière.");return{k:"sell",l:"Éviter",why:why}}
+  why.push("MM20 au-dessus de la MM200 ("+pct(r.ratio-1)+") : tendance haussière.");
+  if(r.crossType==="haussier"&&r.crossAgo<=st.window)why.push("Croisement haussier récent, il y a "+r.crossAgo+" séance"+(r.crossAgo>1?"s":"")+".");
+  if(r.price<r.ma200){why.push("Le cours est passé sous la MM200.");return{k:"sell",l:"Éviter",why:why}}
+  if(r.price<r.ma20){why.push("Le cours est repassé sous la MM20 ("+pct(r.ecart)+") : attendre qu’il la reprenne.");return{k:"wait",l:"Attendre",why:why}}
+  if(r.ecart*100>st.surext){why.push("Cours "+pct(r.ecart)+" au-dessus de la MM20, au-delà du seuil de "+fmt(st.surext,1)+" % : attendre un repli vers la MM20.");return{k:"wait",l:"Attendre",why:why}}
+  why.push("Cours au-dessus de la MM20 ("+pct(r.ecart)+"), sans surextension.");
+  return{k:"buy",l:"Acheter",why:why};
+}
+function exitSignal(p,r){
+  var st=S.settings, why=[];
+  if(!r)return{k:"hold",l:"Sans données",why:["Cette action n’est pas dans le fichier chargé."]};
+  var perf=r.price/p.price-1;
+  if(perf*100<=-st.stop)why.push("Stop-loss touché : "+pct(perf)+" depuis l’achat.");
+  if(r.ma20<r.ma200)why.push("Croisement baissier : la MM20 est sous la MM200.");
+  if(r.ecart*100<=-st.sortie)why.push("Le cours casse la MM20 ("+pct(r.ecart)+").");
+  if(why.length)return{k:"sell",l:"Vendre",why:why};
+  var w=["Tendance intacte : cours "+pct(r.ecart)+" vs MM20, MM20/MM200 "+pct(r.ratio-1)+"."];
+  if(S.top.indexOf(r)<0)w.push("N’est plus dans le top 10 : à surveiller.");
+  return{k:"hold",l:"Conserver",why:w};
+}
+
+/* ---------- données ---------- */
+function ingest(data){
+  if(!data||!Array.isArray(data.dates)||!data.series||typeof data.series!=="object")throw new Error("Le fichier de données est illisible. Vérifiez le dernier passage du script dans l’onglet Actions de GitHub.");
+  var res=[];
+  Object.keys(data.series).forEach(function(t){var r=analyse(t,data.series[t],data.dates);if(r)res.push(r)});
+  if(!res.length)throw new Error("Aucune action n’a assez d’historique (200 séances minimum).");
+  res.sort(function(a,b){return b.ratio-a.ratio});
+  S.data=data;S.results=res;S.top=res.slice(0,10);S.byTicker={};
+  res.forEach(function(r){S.byTicker[r.t.toUpperCase()]=r});
+  if(!S.selected||!S.byTicker[S.selected])S.selected=S.top[0].t;
+  renderAll();
+}
+function update(silent){
+  var btn=$("btnUpdate");btn.disabled=true;btn.textContent="Mise à jour…";
+  return fetch("data/donnees_bourse.json?t="+Date.now(),{cache:"no-store"})
+    .then(function(r){
+      if(r.status===404)throw new Error("Pas encore de données : le script ne s’est pas encore exécuté. Lancez-le une première fois depuis l’onglet Actions de GitHub.");
+      if(!r.ok)throw new Error("Le serveur a répondu "+r.status+". Réessayez dans quelques minutes.");
+      return r.json();
+    })
+    .then(function(data){
+      var before=S.data&&S.data.genere_le;
+      ingest(data);
+      S.checkedAt=Date.now();
+      if(!LS.set("mm.data",data))LS.del("mm.data");
+      LS.set("mm.checked",S.checkedAt);
+      renderStatus();
+      if(!silent)showBanner(before&&before===data.genere_le?"Déjà à jour : pas de nouvelle séance depuis la dernière mise à jour.":"",true);
+    })
+    .catch(function(e){
+      var msg=e instanceof TypeError?"Pas de connexion. Les derniers signaux enregistrés restent affichés.":e.message;
+      if(!silent||!S.data)showBanner(msg,false,true);
+    })
+    .then(function(){btn.disabled=false;btn.textContent="Mise à jour"});
+}
+/* ---------- rendu ---------- */
+var bannerTimer;
+function showBanner(msg,auto,err){
+  clearTimeout(bannerTimer);
+  $("banner").innerHTML=msg?'<p class="banner'+(err?" err":"")+'" role="status">'+esc(msg)+'</p>':"";
+  if(msg&&auto)bannerTimer=setTimeout(function(){$("banner").innerHTML=""},4000);
+}
+function renderStatus(){
+  if(!S.data){$("status").textContent="Aucune donnée chargée.";$("universe").textContent="";return}
+  var last=S.data.dates[S.data.dates.length-1];
+  var chk=S.checkedAt?" · vérifié "+new Date(S.checkedAt).toLocaleString("fr-FR",{weekday:"short",hour:"2-digit",minute:"2-digit"}):"";
+  $("status").textContent="Cours de clôture du "+new Date(last+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})+chk;
+  $("universe").textContent="Classées parmi "+S.results.length+" actions";
+}
+function renderBoard(){
+  var b=$("board");
+  if(!S.top.length){b.innerHTML='<li class="empty">Pas encore de classement.</li>';return}
+  var maxR=S.top[0].ratio-1;
+  b.innerHTML=S.top.map(function(r,i){
+    var sg=entrySignal(r), w=Math.max(4,Math.min(100,(r.ratio-1)/maxR*100));
+    return '<li class="row" role="option" tabindex="0" data-t="'+esc(r.t)+'" aria-selected="'+(r.t===S.selected)+'">'+
+      '<span class="rank">'+(i+1)+'</span>'+
+      '<div><div><span class="tick">'+esc(r.t)+'</span> <span class="name">'+esc(r.n)+'</span></div>'+
+      '<div class="meter" aria-hidden="true"><span style="width:'+w+'%"></span></div>'+
+      '<div class="ratio">MM20/MM200 '+fmt(r.ratio,3)+' · cours '+fmt(r.price)+'</div></div>'+
+      '<span class="pill '+sg.k+'">'+sg.l+'</span></li>';
+  }).join("");
+}
+function chartSVG(r){
+  var N=Math.min(160,r.closes.length), s=r.closes.length-N, W=640,H=260,pl=8,pr=58,pt=10,pb=24;
+  var sl=function(a){return a.slice(s)};
+  var P=sl(r.closes),A=sl(r.m20),B=sl(r.m200),all=P.concat(A,B).filter(function(v){return v!=null});
+  var lo=Math.min.apply(null,all),hi=Math.max.apply(null,all),pad=(hi-lo)*.06||1;lo-=pad;hi+=pad;
+  var x=function(i){return pl+i*(W-pl-pr)/(N-1)}, y=function(v){return pt+(hi-v)*(H-pt-pb)/(hi-lo)};
+  var line=function(a,col,wd){var d="",on=false;a.forEach(function(v,i){if(v==null){on=false;return}d+=(on?"L":"M")+x(i).toFixed(1)+" "+y(v).toFixed(1);on=true});return'<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="'+wd+'" stroke-linejoin="round"/>'};
+  var g="",ticks=4;
+  for(var k=0;k<=ticks;k++){var v=lo+(hi-lo)*k/ticks;g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--line)"/><text x="'+(W-pr+6)+'" y="'+(y(v)+4)+'" font-size="11" fill="var(--muted)">'+fmt(v,v<20?2:0)+'</text>'}
+  var dl=function(i){var dd=new Date(r.dates[s+i]+"T12:00:00");return dd.toLocaleDateString("fr-FR",{month:"short",year:"2-digit"})};
+  [0,Math.floor(N/2),N-1].forEach(function(i,j){g+='<text x="'+x(i)+'" y="'+(H-6)+'" font-size="11" fill="var(--muted)" text-anchor="'+["start","middle","end"][j]+'">'+dl(i)+'</text>'});
+  var mk="";
+  if(r.crossAgo!=null&&r.crossAgo<N){var ci=N-1-r.crossAgo;mk='<circle cx="'+x(ci)+'" cy="'+y(A[ci])+'" r="5" fill="none" stroke="'+(r.crossType==="haussier"?"var(--buy)":"var(--sell)")+'" stroke-width="2"/>'}
+  return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Cours, MM20 et MM200 de '+esc(r.t)+' sur '+N+' séances">'+g+line(B,"var(--mm200)",2)+line(A,"var(--mm20)",2)+line(P,"var(--price)",1.4)+mk+'</svg>';
+}
+function renderDetail(){
+  var r=S.byTicker[(S.selected||"").toUpperCase()], el=$("detail");
+  if(!r){el.innerHTML='<p class="empty">Appuyez sur « Mise à jour » : le classement des 500 actions et les signaux s’affichent ici.</p>';return}
+  var held=S.portfolio.filter(function(p){return p.t.toUpperCase()===r.t.toUpperCase()});
+  var sg=held.length?exitSignal(held[0],r):entrySignal(r);
+  var rank=S.results.indexOf(r)+1;
+  el.innerHTML='<div class="panel-head"><div><h2>'+esc(r.t)+' <span class="muted small">'+esc(r.n)+(r.s?" · "+esc(r.s):"")+'</span></h2>'+
+    '<div class="big">'+fmt(r.price)+'</div><div class="small muted">'+pct(r.change20)+' sur 20 séances · rang '+rank+' / '+S.results.length+'</div></div>'+
+    '<span class="pill '+sg.k+'">'+sg.l+'</span></div>'+
+    '<div class="kv"><div><span>MM20</span><b>'+fmt(r.ma20)+'</b></div><div><span>MM200</span><b>'+fmt(r.ma200)+'</b></div><div><span>Ratio</span><b>'+fmt(r.ratio,3)+'</b></div></div>'+
+    '<div class="chart">'+chartSVG(r)+'</div>'+
+    '<div class="legend"><span><i style="background:var(--price)"></i>Cours</span><span><i style="background:var(--mm20)"></i>MM20</span><span><i style="background:var(--mm200)"></i>MM200</span>'+(r.crossType?'<span>○ dernier croisement '+r.crossType+' le '+new Date(r.crossDate+"T12:00:00").toLocaleDateString("fr-FR")+'</span>':'')+'</div>'+
+    (held.length?'<p class="small muted" style="margin-top:12px">Vous détenez cette action : signal de sortie.</p>':'')+
+    '<ul class="reasons">'+sg.why.map(function(w){return"<li>"+esc(w)+"</li>"}).join("")+'</ul>';
+}
+function renderPortfolio(){
+  var el=$("portfolio");
+  if(!S.portfolio.length){el.innerHTML='<p class="empty">Aucune ligne. Ajoutez une action achetée pour suivre ses signaux de vente.</p>';return}
+  var tot=0,cost=0;
+  var rows=S.portfolio.map(function(p,i){
+    var r=S.byTicker[p.t.toUpperCase()],sg=exitSignal(p,r),val=r?r.price*p.q:null,perf=r?r.price/p.price-1:null;
+    if(r){tot+=val;cost+=p.price*p.q}
+    return '<tr><td><button class="linkbtn" style="color:var(--ink)" data-sel="'+esc(p.t)+'"><strong>'+esc(p.t)+'</strong></button></td>'+
+      '<td class="num">'+fmt(p.q,p.q%1?2:0)+'</td><td class="num">'+fmt(p.price)+'</td><td class="num">'+(r?fmt(r.price):"–")+'</td>'+
+      '<td class="num '+(perf>=0?"pos":"neg")+'">'+pct(perf)+'</td><td class="num">'+fmt(val)+'</td>'+
+      '<td><span class="pill '+sg.k+'">'+sg.l+'</span></td><td style="white-space:normal;min-width:16rem" class="small">'+esc(sg.why.join(" "))+'</td>'+
+      '<td><button class="linkbtn" data-del="'+i+'" aria-label="Supprimer '+esc(p.t)+'">Supprimer</button></td></tr>';
+  }).join("");
+  var tp=cost?tot/cost-1:null;
+  el.innerHTML='<table><thead><tr><th>Action</th><th class="num">Qté</th><th class="num">Prix d’achat</th><th class="num">Cours</th><th class="num">+/-</th><th class="num">Valeur</th><th>Signal</th><th>Pourquoi</th><th></th></tr></thead><tbody>'+rows+
+    '</tbody><tfoot><tr><td colspan="4"><strong>Total</strong></td><td class="num '+(tp>=0?"pos":"neg")+'">'+pct(tp)+'</td><td class="num"><strong>'+fmt(tot)+'</strong></td><td colspan="3"></td></tr></tfoot></table>';
+}
+function renderDatalist(){$("tickers").innerHTML=S.results.slice(0,600).map(function(r){return'<option value="'+esc(r.t)+'">'+esc(r.n)+'</option>'}).join("")}
+function renderAll(){renderStatus();renderBoard();renderDetail();renderPortfolio();renderDatalist()}
+
+/* ---------- événements ---------- */
+$("btnUpdate").onclick=function(){update(false)};
+function selectRow(li){if(!li)return;S.selected=li.getAttribute("data-t");renderBoard();renderDetail();var n=document.querySelector('.row[data-t="'+S.selected+'"]');if(n)n.focus()}
+$("board").addEventListener("click",function(e){selectRow(e.target.closest(".row"))});
+$("board").addEventListener("keydown",function(e){
+  var li=e.target.closest(".row");if(!li)return;
+  if(e.key==="Enter"||e.key===" "){e.preventDefault();selectRow(li)}
+  if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();var n=e.key==="ArrowDown"?li.nextElementSibling:li.previousElementSibling;selectRow(n)}
+});
+$("posForm").addEventListener("submit",function(e){
+  e.preventDefault();
+  var t=$("pTicker").value.trim().toUpperCase(),pr=parseFloat($("pPrice").value),q=parseFloat($("pQty").value);
+  if(!t||!(pr>0)||!(q>0))return;
+  S.portfolio.push({t:t,price:pr,q:q,d:$("pDate").value||null});
+  LS.set("mm.portfolio",S.portfolio);
+  $("posForm").reset();renderPortfolio();renderDetail();
+});
+$("portfolio").addEventListener("click",function(e){
+  var d=e.target.closest("[data-del]"),s=e.target.closest("[data-sel]");
+  if(d){S.portfolio.splice(+d.getAttribute("data-del"),1);LS.set("mm.portfolio",S.portfolio);renderPortfolio();renderDetail()}
+  if(s&&S.byTicker[s.getAttribute("data-sel").toUpperCase()]){S.selected=S.byTicker[s.getAttribute("data-sel").toUpperCase()].t;renderBoard();renderDetail();$("detail").scrollIntoView({behavior:"smooth",block:"start"})}
+});
+[["sSurext","surext"],["sSortie","sortie"],["sStop","stop"],["sWindow","window"]].forEach(function(p){
+  var inp=$(p[0]);inp.value=S.settings[p[1]];
+  inp.addEventListener("change",function(){var v=parseFloat(inp.value);if(!(v>=0)){inp.value=S.settings[p[1]];return}S.settings[p[1]]=v;LS.set("mm.settings",S.settings);if(S.data){renderBoard();renderDetail();renderPortfolio()}});
+});
+
+/* ---------- démarrage ---------- */
+var saved=LS.get("mm.data",null);
+S.checkedAt=LS.get("mm.checked",null);
+if(saved){try{ingest(saved)}catch(e){LS.del("mm.data");renderAll()}}else{renderAll()}
+update(true); // vérification discrète à l’ouverture
+if("serviceWorker" in navigator&&location.protocol!=="file:"){navigator.serviceWorker.register("sw.js").catch(function(){})}
+})();
+</script>
+</body>
+</html>

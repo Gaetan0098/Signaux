@@ -1,0 +1,15 @@
+{
+  "name": "Signaux MM20/MM200",
+  "short_name": "Signaux",
+  "description": "Top 10 du S&P 500 par ratio MM20/MM200, avec signaux d’achat et de vente.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#EEF1F5",
+  "theme_color": "#13233A",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
