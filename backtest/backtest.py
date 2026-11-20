@@ -67,19 +67,12 @@ def lire_wikipedia():
     import requests
     from io import StringIO
     url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-    html = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=30).text
-    tables = pd.read_html(StringIO(html))
-    act = tables[0]
-    actuels = act["Symbol"].astype(str).str.replace(".", "-", regex=False).tolist()
-    noms = dict(zip(actuels, act["Security"].astype(str)))
+    r = requests.get(url, headers={"User-Agent": "SignauxBacktest/1.0 (usage personnel)"}, timeout=30)
+    r.raise_for_status()
+    tables = pd.read_html(StringIO(r.text))
 
-    ch = tables[1].copy()
-    ch.columns = [" ".join(dict.fromkeys(str(x) for x in c)) if isinstance(c, tuple) else str(c)
-                  for c in ch.columns]
-    c_date = next(c for c in ch.columns if "Date" in c)
-    c_aj = next(c for c in ch.columns if "Added" in c and "Ticker" in c)
-    c_re = next(c for c in ch.columns if "Removed" in c and "Ticker" in c)
-    c_reN = next((c for c in ch.columns if "Removed" in c and "Security" in c), None)
+    def aplatir(t):
+        return [" ".join(dict.fromkeys(str(x) for x in c)) if isinstance(c, tuple) else str(c) for c in t.columns]
 
     def propre(v):
         if pd.isna(v):
@@ -87,16 +80,46 @@ def lire_wikipedia():
         v = str(v).strip()
         return None if v in ("", "nan") else v.replace(".", "-")
 
-    changements = []
-    for _, r in ch.iterrows():
-        d = pd.to_datetime(r[c_date], errors="coerce")
-        if pd.isna(d):
-            continue
-        a, rt = propre(r[c_aj]), propre(r[c_re])
-        changements.append((d.normalize(), a, rt))
-        if rt and c_reN and rt not in noms:
-            noms[rt] = str(r[c_reN])
-    return actuels, changements, noms
+    act = next(t for t in tables if "Symbol" in aplatir(t))
+    act.columns = aplatir(act)
+    actuels = act["Symbol"].astype(str).str.replace(".", "-", regex=False).tolist()
+    noms = dict(zip(actuels, act["Security"].astype(str)))
+
+    # 1er choix : le tableau des changements (entrées ET sorties de l'indice), s'il existe encore
+    changements, ch = [], None
+    for t in tables:
+        cols = aplatir(t)
+        if any("Added" in c for c in cols) and any("Removed" in c for c in cols):
+            ch = t.copy()
+            ch.columns = cols
+            break
+    if ch is not None:
+        cols = list(ch.columns)
+        c_date = next((c for c in cols if "date" in c.lower()), cols[0])
+        c_aj = next(c for c in cols if "Added" in c and ("Ticker" in c or "Symbol" in c))
+        c_re = next(c for c in cols if "Removed" in c and ("Ticker" in c or "Symbol" in c))
+        c_reN = next((c for c in cols if "Removed" in c and "Security" in c), None)
+        for _, ligne in ch.iterrows():
+            d = pd.to_datetime(ligne[c_date], errors="coerce")
+            if pd.isna(d):
+                continue
+            a, rt = propre(ligne[c_aj]), propre(ligne[c_re])
+            changements.append((d.normalize(), a, rt))
+            if rt and c_reN and rt not in noms:
+                noms[rt] = str(ligne[c_reN])
+        composition = "historique complète (entrées et sorties de l’indice)"
+    else:
+        # 2e choix : seulement les dates d'entrée des membres actuels
+        c_aj = next((c for c in act.columns if "date" in c.lower() and "add" in c.lower()), None)
+        if c_aj:
+            for sym, d in zip(actuels, pd.to_datetime(act[c_aj], errors="coerce")):
+                if not pd.isna(d) and d >= pd.Timestamp(DEBUT_DONNEES):
+                    changements.append((d.normalize(), sym, None))
+        composition = ("partielle : dates d’entrée des membres actuels uniquement, les sociétés sorties "
+                       "de l’indice depuis 2020 ne sont pas testées (biais du survivant plus marqué)")
+        print("Tableau des changements introuvable sur Wikipedia : composition reconstituée "
+              "à partir des dates d'entrée seulement.")
+    return actuels, changements, noms, composition
 
 
 def telecharger(tickers, debut):
@@ -141,7 +164,7 @@ def dates_resultats(tickers):
 
 def charger_reel():
     print("Lecture de la composition du S&P 500…")
-    actuels, changements, noms = lire_wikipedia()
+    actuels, changements, noms, composition = lire_wikipedia()
     anciens = {r for d, a, r in changements if r and d >= pd.Timestamp(DEBUT_DONNEES)}
     tickers = sorted(set(actuels) | anciens)
     print(f"{len(actuels)} membres actuels + {len(anciens - set(actuels))} anciens membres depuis 2019")
@@ -152,7 +175,7 @@ def charger_reel():
     res = dates_resultats([t for t in tickers if t in px["Close"].columns])
     return dict(px=px, spy=spy["Close"]["SPY"], spy_open=spy["Open"]["SPY"],
                 actuels=actuels, changements=changements, noms=noms, tickers_demandes=tickers,
-                resultats=res, source="Yahoo Finance + Wikipedia (composition historique)")
+                resultats=res, source="Yahoo Finance + Wikipedia", composition=composition)
 
 
 # ---------------------------------------------------------------- données fictives
@@ -181,7 +204,8 @@ def charger_demo():
     res = {t: list(idx[rng.integers(0, 63)::63]) for t in tick}
     return dict(px=px, spy=spy, spy_open=spy.shift(1).fillna(spy), actuels=actuels,
                 changements=changements, noms={t: f"Société fictive {t[4:]}" for t in tick},
-                tickers_demandes=tick + ["DEMOX"], resultats=res, source="Données fictives (démo)")
+                tickers_demandes=tick + ["DEMOX"], resultats=res, source="Données fictives (démo)",
+                composition="fictive")
 
 
 # ---------------------------------------------------------------- indicateurs
@@ -275,6 +299,7 @@ def preparer(D):
         elig={k: v.values for k, v in elig.items()},
         couverture_resultats=n_res / max(1, len(tick)),
         n_demandes=len(D["tickers_demandes"]), n_obtenus=len(tick), source=D["source"],
+        composition=D.get("composition", ""),
     )
 
 
@@ -474,7 +499,7 @@ def page(titre, corps, I):
     return f"""<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{titre}</title><style>{CSS}</style></head><body><main><h1>{titre}</h1>
 <p class="mut">Généré le {datetime.now(timezone.utc):%d/%m/%Y à %H:%M} UTC · {I['source']}<br>{hyp}<br>
-Couverture : {I['n_obtenus']} actions avec cours sur {I['n_demandes']} ayant fait partie de l’indice · dates de résultats pour {I['couverture_resultats'] * 100:.0f} % d’entre elles</p>
+Composition de l’indice : {I['composition']}<br>Couverture : {I['n_obtenus']} actions avec cours sur {I['n_demandes']} ayant fait partie de l’indice · dates de résultats pour {I['couverture_resultats'] * 100:.0f} % d’entre elles</p>
 {corps}
 <h2>Comment lire ce rapport</h2><div class="card mut">
 <p><b>Rendement / an</b> : croissance annuelle moyenne du capital. <b>Pire chute</b> : plus forte baisse entre un sommet et le creux suivant, ce qu’il aurait fallu supporter. <b>Sharpe</b> : rendement rapporté aux variations (au-dessus de 1, c’est bon). <b>Calmar</b> : rendement annuel divisé par la pire chute.</p>
