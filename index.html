@@ -205,6 +205,16 @@ body[data-mode="eu"] .us-only{display:none}
 .rank{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1}
 .delta{font-size:.72rem;font-weight:800;white-space:nowrap;margin-top:2px}
 .delta.up{color:var(--buy)}.delta.down{color:var(--sell)}.delta.new{color:var(--buy)}
+.ibtn{flex:none;width:28px;height:28px;padding:0;border-radius:50%;border:1.5px solid var(--muted);background:none;color:var(--muted);font:700 .85rem/1 Georgia,"Times New Roman",serif;font-style:italic;display:inline-flex;align-items:center;justify-content:center}
+.ibtn[aria-expanded="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.headr{display:inline-flex;align-items:center;gap:10px;margin-left:auto}
+.infotext{background:var(--bg);border-radius:10px;padding:10px 14px;margin:0 0 12px;font-size:.88rem;color:var(--muted)}
+.infotext p{margin:6px 0}
+.infotext[hidden]{display:none}
+.toppct{margin:-6px 0 10px;text-align:right;font-size:.82rem;color:var(--muted);font-weight:600}
+.eu-inline,.eu-only-inline{display:none}
+body[data-mode="eu"] .eu-inline{display:inline}
+body[data-mode="eu"] .eu-only-inline{display:block}
 /* fiche détail (mobile) */
 .sheet{position:fixed;inset:0;z-index:30;background:rgba(10,18,30,.45);display:flex;align-items:flex-end}
 .sheet[hidden]{display:none}
@@ -246,7 +256,12 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
         <div class="panel">
           <div class="panel-head">
             <h2>Ordres pour la prochaine séance</h2>
-            <span class="muted small" id="slots"></span>
+            <span class="headr"><span class="muted small" id="slots"></span><button class="ibtn" type="button" data-info="infoOrdres" aria-expanded="false" aria-label="Informations">i</button></span>
+          </div>
+          <div class="infotext" id="infoOrdres" hidden>
+            <p>Les signaux sont calculés sur les cours de clôture. Les ordres se passent à l’ouverture de la séance suivante, comme dans le backtest.</p>
+            <p>Les achats portent sur les meilleurs ratios MM20/MM200 non détenus, à parts égales, tant qu’il reste des places. Le montant par ligne vaut le capital divisé par le nombre de lignes.</p>
+            <p>Touchez « Acheter » ou « Vendre » pour enregistrer l’ordre dans le portefeuille, pré-rempli avec la dernière clôture : remplacez le prix par celui réellement obtenu.</p>
           </div>
           <div id="orders" class="orders"></div>
         </div>
@@ -255,10 +270,14 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
       <section class="tabpanel" id="tab-classement" role="tabpanel" aria-label="Classement" hidden>
         <div class="panel">
           <div class="panel-head">
-            <h2>Classement MM20/MM200</h2>
-            <label class="topsize">Top<input type="number" id="topSize" min="1" step="1" inputmode="numeric" aria-label="Taille du classement"></label>
+            <h2>Classement</h2>
+            <span class="headr"><label class="topsize">Top<input type="number" id="topSize" min="1" step="1" inputmode="numeric" aria-label="Taille du classement"></label><button class="ibtn" type="button" data-info="infoClass" aria-expanded="false" aria-label="Informations">i</button></span>
           </div>
-          <p class="muted small" id="boardInfo" style="margin:-4px 0 10px"></p>
+          <p class="toppct" id="topPct"></p>
+          <div class="infotext" id="infoClass" hidden><p id="boardInfo"></p>
+            <p>Par défaut, la taille du classement vaut 10 % du nombre d’actions sélectionnées (au moins le nombre de lignes du portefeuille). Elle se recalcule à chaque changement de sélection, et reste modifiable à la main ici.</p>
+            <p>Flèches : ▲ vert = places gagnées depuis la veille, ▼ rouge = places perdues, « new » = action qui vient d’entrer en tendance haussière.</p>
+          </div>
           <ol class="board" id="board" role="listbox" aria-label="Classement par ratio MM20/MM200"></ol>
         </div>
       </section>
@@ -267,7 +286,11 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
         <div class="panel">
           <div class="panel-head">
             <h2>Mon portefeuille</h2>
-            <span class="muted small">Ajoutez chaque achat réalisé : l’appli en déduit les ventes et les places libres.</span>
+            <button class="ibtn" type="button" data-info="infoPort" aria-expanded="false" aria-label="Informations">i</button>
+          </div>
+          <div class="infotext" id="infoPort" hidden>
+            <p>Enregistrez chaque achat réalisé : l’appli en déduit les ventes à faire et les places libres. Les boutons « Acheter » et « Vendre » des ordres pré-remplissent ce formulaire avec la dernière clôture : remplacez le prix par celui réellement obtenu.</p>
+            <p>« Annuler l’achat » et « Annuler la vente » corrigent une erreur ; un bandeau permet aussi d’annuler juste après l’enregistrement. Les résultats sont calculés hors frais<span class="eu-inline"> et convertis en euros au cours du jour</span>.</p>
           </div>
           <form class="form" id="posForm" autocomplete="off">
             <label>Opération<select id="pOp"><option value="achat">Achat</option><option value="vente">Vente</option></select></label>
@@ -287,7 +310,14 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
 
       <section class="tabpanel" id="tab-reglages" role="tabpanel" aria-label="Réglages" hidden>
         <div class="panel">
-          <div class="panel-head"><h2>Réglages</h2></div>
+          <div class="panel-head"><h2>Réglages</h2><button class="ibtn" type="button" data-info="infoRegl" aria-expanded="false" aria-label="Informations">i</button></div>
+          <div class="infotext" id="infoRegl" hidden>
+            <p><strong>La règle :</strong> parmi les actions sélectionnées dont la MM20 est au-dessus de la MM200, on achète celles qui ont le meilleur ratio MM20/MM200, à parts égales, tant qu’il reste des places. Une action détenue est vendue dès qu’elle sort du classement, que sa MM20 repasse sous sa MM200, ou qu’elle quitte la sélection ou l’indice. Pas de stop.</p>
+            <p><strong>Momentum 12 mois :</strong> affiché pour information (hausse sur 12 mois, hors dernier mois). Il n’entre pas dans les signaux.</p>
+            <p><strong>Backtest :</strong> fait uniquement sur le S&amp;P 500, avec la règle d’origine (vente au seul croisement baissier). En 2021-2024 : +23,6 %/an contre +13,9 % pour l’indice, pire chute −28 %. En validation 2025-2026 : +18,3 %/an contre +10,3 %, mais une chute de −47 % à un moment donné. La vente à la sortie du classement, la sélection d’actions et le mode Europe n’ont pas été testés. Sous 10 lignes, le risque augmente fortement.</p>
+            <p class="eu-only-inline">Les sociétés britanniques et suisses ne sont en principe pas éligibles au PEA, les américaines non plus.</p>
+            <p>Outil d’aide à la décision fondé uniquement sur des moyennes mobiles ; il ne tient compte ni des résultats des entreprises, ni de l’actualité. Ce n’est pas un conseil en investissement.</p>
+          </div>
           <div class="settings">
             <label>Capital du portefeuille (€)<input type="number" id="sCapital" step="100" min="0"></label>
             <label>Nombre de lignes<input type="number" id="sLignes" step="1" min="1"></label>
@@ -295,26 +325,20 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
             <label>Taille du classement (vente si l’action en sort)<input type="number" id="sSortie" step="1" min="1"></label>
           </div>
         </div>
-        <div class="panel eu-only eusel" style="margin-top:16px">
-          <div class="panel-head"><h2>Mes actions européennes</h2><span class="muted small" id="euCount"></span></div>
-          <p class="small muted">Base : les 600 sociétés du STOXX Europe 600, mise à jour chaque soir. Cochez celles à suivre : elles forment votre classement et vos ordres en mode Europe. Les cours sont dans la devise de chaque bourse ; les montants à investir sont convertis depuis l’euro.</p>
+        <div class="panel eusel" style="margin-top:16px">
+          <div class="panel-head"><h2 id="selTitle">Mes actions</h2><span class="headr"><span class="muted small" id="euCount"></span><button class="ibtn" type="button" data-info="infoSel" aria-expanded="false" aria-label="Informations">i</button></span></div>
+          <div class="infotext" id="infoSel" hidden><p id="selInfo"></p></div>
           <div class="eufiltres">
             <label>Rechercher<input id="euSearch" type="search" placeholder="Nom, symbole, pays ou secteur"></label>
-            <label>Capitalisation<select id="euCap">
-              <option value="">Toutes</option>
-              <option value="50">Plus de 50 Md€</option>
-              <option value="10-50">10 à 50 Md€</option>
-              <option value="2-10">2 à 10 Md€</option>
-              <option value="0-2">Moins de 2 Md€</option>
-            </select></label>
+            <label>Capitalisation<select id="euCap"></select></label>
             <label>Trier par<select id="euTri"><option value="cap">Capitalisation</option><option value="nom">Nom</option></select></label>
           </div>
           <div class="row2" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button id="euAll">Tout ajouter</button><button id="euNone">Tout désélectionner</button></div>
           <div id="euList"><p class="small muted">La base s’affichera après la première mise à jour.</p></div>
         </div>
         <div class="panel" style="margin-top:16px">
-          <div class="panel-head"><h2>Actions prises en compte</h2><span class="muted small" id="univCount"></span></div>
-          <p class="small muted" id="univInfo">Pas encore de données.</p>
+          <div class="panel-head"><h2>Actions prises en compte</h2><span class="headr"><span class="muted small" id="univCount"></span><button class="ibtn" type="button" data-info="infoUniv" aria-expanded="false" aria-label="Informations">i</button></span></div>
+          <div class="infotext" id="infoUniv" hidden><p id="univInfo">Pas encore de données.</p></div>
           <details class="univ" id="univDetails">
             <summary>Afficher la liste</summary>
             <label class="univ-search">Rechercher<input id="univSearch" type="search" placeholder="Nom, symbole ou secteur"></label>
@@ -322,32 +346,19 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
           </details>
         </div>
         <div class="panel" style="margin-top:16px">
-          <div class="panel-head"><h2>Sauvegarde</h2></div>
-          <p class="small muted">Votre portefeuille et vos réglages sont enregistrés uniquement sur cet appareil. Pour les garder en cas de changement de téléphone, ou les transférer, copiez une sauvegarde et gardez-la dans une note.</p>
+          <div class="panel-head"><h2>Sauvegarde</h2><button class="ibtn" type="button" data-info="infoSauv" aria-expanded="false" aria-label="Informations">i</button></div>
+          <div class="infotext" id="infoSauv" hidden><p>Portefeuilles, sélections et réglages sont enregistrés uniquement sur cet appareil. Pour les garder en cas de changement de téléphone, copiez une sauvegarde et gardez-la dans une note.</p></div>
           <div class="backup">
             <div class="row2"><button id="btnExport">Copier ma sauvegarde</button></div>
             <label>Restaurer une sauvegarde<textarea id="backupText" placeholder="Collez ici le texte de la sauvegarde"></textarea></label>
             <div class="row2"><button id="btnImport">Restaurer</button></div>
           </div>
         </div>
-        <div class="panel" style="margin-top:16px">
-          <div class="panel-head"><h2>La règle</h2></div>
-          <div class="rules" style="margin-top:0">
-            <p><strong>La règle :</strong> parmi les actions <span class="univName">du S&amp;P 500</span> dont la MM20 est au-dessus de la MM200, on achète celles qui ont le ratio MM20/MM200 le plus élevé, à parts égales, tant qu’il reste des places. On garde chaque action tant qu’elle reste dans les 50 meilleurs ratios (réglable) ; on la vend dès que l’une de ces conditions est remplie : elle sort de ce top 50, sa MM20 repasse sous sa MM200, ou elle quitte l’indice. Pas de stop.</p>
-            <p><strong>Quand agir :</strong> les signaux sont calculés sur les cours de clôture ; les ordres se passent à l’ouverture de la séance suivante, comme dans le backtest.</p>
-            <p><strong>Momentum 12 mois :</strong> affiché pour information (hausse sur 12 mois, hors dernier mois). Il n’entre pas dans les signaux : son utilité n’a pas été démontrée par le test.</p>
-            <p class="note eu-only"><strong>Mode Europe : le backtest a été fait uniquement sur le S&amp;P 500.</strong> Rien ne garantit que la règle se comporte pareil sur votre sélection européenne, ni sur un petit nombre d’actions. Les sociétés britanniques et suisses ne sont en principe pas éligibles au PEA.</p>
-            <p class="note"><strong>Attention : la vente à la sortie du top 50 n’a pas été testée.</strong> Les chiffres qui suivent concernent la règle d’origine (vente uniquement au croisement baissier). Ce que le backtest a montré : en 2021-2024, +23,6 %/an contre +13,9 % pour l’indice, avec une pire chute de −28 %. En validation 2025-2026, +18,3 %/an contre +10,3 %, mais une chute de −47 % à un moment donné. Le rendement supplémentaire se paie par un risque nettement plus élevé. En dessous de 10 lignes, le risque augmente fortement.</p>
-          </div>
-        </div>
-        <footer>
-          Outil d’aide à la décision fondé uniquement sur des moyennes mobiles ; il ne tient compte ni des résultats des entreprises, ni de l’actualité. Ce n’est pas un conseil en investissement. Les cours sont mis à jour automatiquement chaque soir de bourse.
-        </footer>
       </section>
     </div>
 
     <aside class="panel detail" id="detail" aria-live="polite">
-      <p class="empty">Touchez une action pour voir son graphique et l’explication du signal.</p>
+      <p class="empty">Touchez une action pour voir son graphique.</p>
     </aside>
   </div>
 </div>
@@ -372,10 +383,12 @@ var LS={
 var MODES={
   us:{id:"us",nom:"S&P 500",cur:"$",fichier:"data/donnees_bourse.json",
       cles:{data:"mm.data",port:"mm.portfolio",ventes:"mm.ventes",settings:"mm.pur.settings",checked:"mm.checked"},
-      defauts:{capital:10000,lignes:10,fx:1.15,sortie:50}},
+      defauts:{capital:10000,lignes:10,fx:1.15,sortie:null},selKey:"mm.us.selection",selDefaut:"toutes",
+      caps:[["","Toutes"],["500","Plus de 500 Md$"],["100-500","100 à 500 Md$"],["30-100","30 à 100 Md$"],["0-30","Moins de 30 Md$"]]},
   eu:{id:"eu",nom:"Europe",cur:"€",fichier:"data/donnees_europe.json",
       cles:{data:"mm.eu.data",port:"mm.eu.portfolio",ventes:"mm.eu.ventes",settings:"mm.eu.settings",checked:"mm.eu.checked"},
-      defauts:{capital:10000,lignes:10,fx:1,sortie:50}}
+      defauts:{capital:10000,lignes:10,fx:1,sortie:null},selKey:"mm.eu.selection",selDefaut:"aucune",
+      caps:[["","Toutes"],["50","Plus de 50 Md€"],["10-50","10 à 50 Md€"],["2-10","2 à 10 Md€"],["0-2","Moins de 2 Md€"]]}
 };
 var MODE=MODES[LS.get("mm.mode","us")]||MODES.us;
 function K(k){return MODE.cles[k]}
@@ -394,7 +407,20 @@ function enEuros(v,t){return v==null?null:MODE.id==="us"?v:v/fxOf(t)}
 var S={data:null,full:null,results:[],byTicker:{},ranked:[],rang:{},plan:null,selected:null,checkedAt:null,
   settings:Object.assign({},MODE.defauts,LS.get(K("settings"),{})),
   portfolio:LS.get(K("port"),[]),ventes:LS.get(K("ventes"),[]),
-  selEU:LS.get("mm.eu.selection",[])};
+  sel:LS.get(MODE.selKey,null)};
+/* liste des actions disponibles (base du fichier, ou reconstituée à partir des cours) */
+function baseListe(){
+  var f=S.full;if(!f)return[];
+  if(f.base)return f.base;
+  if(!f._base)f._base=Object.keys(f.series).map(function(t){return{t:t,n:f.series[t].n||t,secteur:f.series[t].s||"",pays:"",ok:true}});
+  return f._base;
+}
+/* sélection courante : liste explicite, ou par défaut toutes (S&P 500) / aucune (Europe) */
+function SEL(){
+  if(Array.isArray(S.sel))return S.sel;
+  return MODE.selDefaut==="toutes"?baseListe().filter(function(b){return b.ok!==false}).map(function(b){return b.t}):[];
+}
+function tailleAuto(n){return Math.max(S.settings.lignes,Math.round(n*0.10))}
 var DEFAULTS=MODE.defauts;
 var $=function(id){return document.getElementById(id)};
 var fmt=function(v,d){return v==null||isNaN(v)?"–":v.toLocaleString("fr-FR",{minimumFractionDigits:d==null?2:d,maximumFractionDigits:d==null?2:d})};
@@ -421,7 +447,7 @@ function analyse(t,serie,dates){
 function heldTickers(){var seen={},out=[];S.portfolio.forEach(function(p){var t=p.t.toUpperCase();if(!seen[t]){seen[t]=1;out.push(t)}});return out}
 function sellReason(t){
   var r=S.byTicker[t];
-  if(!r)return MODE.id==="eu"?"N’est plus dans votre sélection européenne (ou plus de cours) : la règle vend.":"N’est plus dans le S&P 500 : la règle vend.";
+  if(!r)return"N’est plus dans votre sélection (ou a quitté l’indice) : la règle vend.";
   if(!r.up)return"Croisement baissier : la MM20 ("+fmt(r.ma20)+") est passée sous la MM200 ("+fmt(r.ma200)+").";
   var rg=S.rang[t];
   if(rg>S.settings.sortie)return"Sortie du top "+S.settings.sortie+" : classée "+rg+"e sur les ratios MM20/MM200.";
@@ -491,17 +517,18 @@ function ingest(full){
   if(!full||!Array.isArray(full.dates)||!full.series||typeof full.series!=="object")throw new Error("Le fichier de données est illisible. Vérifiez le dernier passage du script dans l’onglet Actions de GitHub.");
   S.full=full;
   var data=full;
-  if(MODE.id==="eu"){
-    var sel={};S.selEU.forEach(function(t){sel[t]=1});
+  {
+    var sel={};SEL().forEach(function(t){sel[t]=1});
     var series={};Object.keys(full.series).forEach(function(t){if(sel[t])series[t]=full.series[t]});
     data={dates:full.dates,series:series,genere_le:full.genere_le};
   }
   var res=[];Object.keys(data.series).forEach(function(t){var r=analyse(t,data.series[t],data.dates);if(r)res.push(r)});
-  if(!res.length&&MODE.id!=="eu")throw new Error("Aucune action n’a assez d’historique (200 séances minimum).");
+  if(!res.length&&!SEL().length&&false)throw new Error("Aucune action n’a assez d’historique (200 séances minimum).");
   res.sort(function(a,b){return b.ratio-a.ratio});
   S.data=data;S.results=res;S.byTicker={};res.forEach(function(r){S.byTicker[r.t.toUpperCase()]=r});
   S.ranked=res.filter(function(r){return r.up});
   S.rang={};S.ranked.forEach(function(r,i){S.rang[r.t.toUpperCase()]=i+1});
+  if(!S.settings.sortie){S.settings.sortie=tailleAuto(SEL().length);LS.set(K("settings"),S.settings);syncInputs()}
   computeTopHistory();
   computePlan();
   if(!S.selected||!S.byTicker[S.selected]){var d0=S.plan.buys[0]||S.ranked[0]||res[0];S.selected=d0?d0.t.toUpperCase():null}
@@ -545,7 +572,7 @@ function orderRow(kind,label,r,t,qtyHtml,why){
 }
 function renderOrders(){
   var el=$("orders"),p=S.plan;
-  if(MODE.id==="eu"&&S.full&&!S.selEU.length){el.innerHTML='<p class="empty">Aucune action européenne sélectionnée. <button class="linkbtn" style="color:var(--ink)" data-goto="reglages">Choisir mes actions</button></p>';$("slots").textContent="";return}
+  if(S.full&&!SEL().length){el.innerHTML='<p class="empty">Aucune action sélectionnée. <button class="linkbtn" style="color:var(--ink)" data-goto="reglages">Choisir mes actions</button></p>';$("slots").textContent="";return}
   if(!p){el.innerHTML='<p class="empty">Pas encore de données.</p>';$("slots").textContent="";return}
   $("slots").textContent=(S.settings.lignes-p.libres)+" / "+S.settings.lignes+" lignes occupées après ventes";
   var h="";
@@ -571,6 +598,11 @@ function renderOrders(){
   }
   el.innerHTML=h;
 }
+function renderTopPct(){
+  var n=SEL().length,v=S.settings.sortie,el=$("topPct");
+  if(!n||!v){el.textContent="";return}
+  el.textContent=fmt(v/n*100,v/n*100<10&&v/n*100%1?1:0)+" % des "+n+" actions"+(v===tailleAuto(n)?" · auto":" · manuel");
+}
 function deltaHTML(r,rang){
   if(r.rangVeille==null)return'<span class="delta new" title="Nouvelle dans le classement (MM20 passée au-dessus de la MM200)" aria-label="nouvelle">▲ new</span>';
   var d=r.rangVeille-rang;
@@ -580,7 +612,8 @@ function deltaHTML(r,rang){
 }
 function renderBoard(){
   var b=$("board");
-  if(MODE.id==="eu"&&!S.selEU.length){b.innerHTML='<li class="empty">Aucune action européenne sélectionnée : cochez-les dans Réglages.</li>';$("boardInfo").textContent="";return}
+  renderTopPct();
+  if(S.full&&!SEL().length){b.innerHTML='<li class="empty">Aucune action sélectionnée : cochez-les dans Réglages.</li>';$("boardInfo").textContent="";return}
   if(!S.ranked.length){b.innerHTML='<li class="empty">Aucune action avec la MM20 au-dessus de la MM200.</li>';return}
   var top=S.ranked.slice(0,S.settings.sortie),maxR=top[0].ratio-1;
   var veille=S.data.dates.length>1?new Date(S.data.dates[S.data.dates.length-2]+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long"}):"";
@@ -615,7 +648,7 @@ function chartSVG(r){
 function renderDetail(){
   var el={set innerHTML(h){$("detail").innerHTML=h;$("sheetBody").innerHTML=h}},t=S.selected,r=S.byTicker[t];
   if(!r){
-    el.innerHTML=t&&S.plan&&S.plan.held[t]?'<h2>'+esc(t)+'</h2><p class="empty">Cette action n’est plus dans '+(MODE.id==="eu"?"votre sélection":"le S&amp;P 500")+' : la règle la vend.</p>':'<p class="empty">Appuyez sur « Mise à jour » : les ordres et le classement s’affichent ici.</p>';
+    el.innerHTML=t&&S.plan&&S.plan.held[t]?'<h2>'+esc(t)+'</h2><p class="empty">Cette action n’est plus dans votre sélection : la règle la vend.</p>':'<p class="empty">Appuyez sur « Mise à jour » : les ordres et le classement s’affichent ici.</p>';
     return;
   }
   var st=statusOf(t),rank=S.ranked.indexOf(r),why=[];
@@ -626,16 +659,16 @@ function renderDetail(){
   else why.push("Sa MM20 est sous sa MM200 : la règle ne l’achète pas.");
   if(r.crossType)why.push("Dernier croisement "+r.crossType+" le "+new Date(r.crossDate+"T12:00:00").toLocaleDateString("fr-FR")+".");
   el.innerHTML='<div class="panel-head"><div><h2>'+esc(r.n&&r.n!==r.t?r.n:r.t)+' <span class="muted small">'+(r.n&&r.n!==r.t?"– "+esc(r.t):"")+(r.s?" · "+esc(r.s):"")+'</span></h2>'+
-    '<div class="big">'+fmt(r.price)+' '+CUR(r.t)+'</div><div class="small muted">'+(rank>=0?"Rang "+(rank+1)+" sur "+S.ranked.length+" actions en tendance":"Hors tendance")+(MODE.id==="eu"&&capDe(r.t)?" · capitalisation "+capTxt(capDe(r.t)):"")+'</div></div>'+
-    '<span class="pill '+st.k+'">'+st.l+'</span></div>'+
+    '<div class="big">'+fmt(r.price)+' '+CUR(r.t)+'</div><div class="small muted">'+(rank>=0?"Rang "+(rank+1)+" sur "+S.ranked.length+" actions en tendance":"Hors tendance")+(capDe(r.t)?" · capitalisation "+capTxt(capDe(r.t)):"")+'</div></div>'+
+    '<span class="headr" style="flex-direction:column;align-items:flex-end"><span class="pill '+st.k+'">'+st.l+'</span><button class="ibtn" type="button" data-info="infoFiche" aria-expanded="false" aria-label="Pourquoi ce signal ?">i</button></span></div>'+
+    '<div class="infotext" data-infobox="infoFiche" hidden><ul class="reasons" style="margin:0">'+why.map(function(w){return"<li>"+esc(w)+"</li>"}).join("")+'</ul></div>'+
     '<div class="kv"><div><span>MM20</span><b>'+fmt(r.ma20)+'</b></div><div><span>MM200</span><b>'+fmt(r.ma200)+'</b></div><div><span>Ratio</span><b>'+fmt(r.ratio,3)+'</b></div></div>'+
     '<div class="chart">'+chartSVG(r)+'</div>'+
     '<div class="legend"><span><i style="background:var(--price)"></i>Cours</span><span><i style="background:var(--mm20)"></i>MM20</span><span><i style="background:var(--mm200)"></i>MM200</span><span><i style="background:var(--buy);width:3px;height:12px"></i>Entrée top '+S.settings.sortie+'</span></div>'+
     '<p class="small" style="margin-top:8px"><strong>'+esc(topTexte(r))+'</strong></p>'+
-    '<ul class="reasons">'+why.map(function(w){return"<li>"+esc(w)+"</li>"}).join("")+'</ul>'+
     (st.k==="buy"?'<div class="actbar"><button class="pill buy" data-act="achat" data-t="'+esc(r.t)+'">Acheter</button></div>':
      st.k==="sell"?'<div class="actbar"><button class="pill sell" data-act="vente" data-t="'+esc(r.t)+'">Vendre</button></div>':"")+
-    '<p class="info" style="margin-top:10px">Momentum 12 mois (information) : '+pct(r.mom)+'</p>';
+    '<p class="info" style="margin-top:10px">Momentum 12 mois : '+pct(r.mom)+'</p>';
 }
 function renderPortfolio(){
   var el=$("portfolio"),eu=MODE.id==="eu";
@@ -653,7 +686,7 @@ function renderPortfolio(){
   }).join("");
   var tp=cost?tot/cost-1:null;
   el.innerHTML='<table><thead><tr><th>Action</th><th class="num">Qté</th><th class="num">Prix d’achat'+HCUR()+'</th><th class="num">Cours'+HCUR()+'</th><th class="num">+/-</th><th class="num">Valeur'+HCUR()+'</th><th class="num">Ratio</th><th class="num">Momentum 12 m</th><th>Signal</th><th></th></tr></thead><tbody>'+rows+
-    '</tbody><tfoot><tr><td colspan="4"><strong>Total</strong>'+(eu?' <span class="info">(converti en € au cours du jour)</span>':'')+'</td><td class="num '+(tp>=0?"pos":"neg")+'">'+pct(tp)+'</td><td class="num"><strong>'+fmt(tot)+(eu?" €":"")+'</strong></td><td colspan="4"></td></tr></tfoot></table>';
+    '</tbody><tfoot><tr><td colspan="4"><strong>Total</strong></td><td class="num '+(tp>=0?"pos":"neg")+'">'+pct(tp)+'</td><td class="num"><strong>'+fmt(tot)+(eu?" €":"")+'</strong></td><td colspan="4"></td></tr></tfoot></table>';
 }
 function renderVentes(){
   var el=$("ventes"),eu=MODE.id==="eu";
@@ -667,7 +700,7 @@ function renderVentes(){
       '<td><button class="linkbtn" data-delv="'+i+'">Annuler la vente</button></td></tr>';
   }).join("");
   el.innerHTML='<table><thead><tr><th>Date</th><th>Action</th><th class="num">Qté</th><th class="num">Prix d’achat moyen'+HCUR()+'</th><th class="num">Prix de vente'+HCUR()+'</th><th class="num">Résultat'+HCUR()+'</th><th class="num">%</th><th></th></tr></thead><tbody>'+rows+
-    '</tbody><tfoot><tr><td colspan="5"><strong>Total réalisé</strong> <span class="info">(hors frais'+(eu?", converti en € au cours du jour":"")+')</span></td><td class="num '+(tot>=0?"pos":"neg")+'"><strong>'+(tot>=0?"+":"")+fmt(tot)+(eu?" €":"")+'</strong></td><td colspan="2"></td></tr></tfoot></table>';
+    '</tbody><tfoot><tr><td colspan="5"><strong>Total réalisé</strong></td><td class="num '+(tot>=0?"pos":"neg")+'"><strong>'+(tot>=0?"+":"")+fmt(tot)+(eu?" €":"")+'</strong></td><td colspan="2"></td></tr></tfoot></table>';
 }
 $("ventes").addEventListener("click",function(e){
   var d=e.target.closest("[data-delv]");if(!d)return;
@@ -680,7 +713,7 @@ function renderUnivers(){
   if(!S.data){$("univCount").textContent="";return}
   var total=Object.keys(S.data.series).length,ok=S.results.length,up=S.ranked.length;
   $("univCount").textContent=ok+" actions";
-  $("univInfo").textContent=(MODE.id==="eu"?"Votre sélection européenne ("+S.selEU.length+" cochées)":"Liste actuelle du S&P 500 (source : Wikipedia)")+", cours Yahoo Finance au "+dateFR(S.data.dates[S.data.dates.length-1])+". "+
+  $("univInfo").textContent="Votre sélection ("+SEL().length+" actions, parmi "+(MODE.id==="eu"?"le STOXX Europe 600":"le S&P 500")+"), cours Yahoo Finance au "+dateFR(S.data.dates[S.data.dates.length-1])+". "+
     ok+" actions analysées"+(total>ok?" ("+(total-ok)+" écartées faute d’historique suffisant)":"")+", dont "+up+" avec la MM20 au-dessus de la MM200. "+
     "Les sociétés entrées en bourse depuis moins d’environ 10 mois n’ont pas encore assez d’historique et n’apparaissent pas.";
   if(!$("univDetails").open)return;   /* la liste n’est construite qu’à l’ouverture */
@@ -745,7 +778,7 @@ function renderBadge(){
 /* ---------- sauvegarde ---------- */
 $("btnExport").onclick=function(){
   var pack=function(m){var c=MODES[m].cles;return{portfolio:LS.get(c.port,[]),ventes:LS.get(c.ventes,[]),settings:LS.get(c.settings,null)}};
-  var txt=JSON.stringify({v:2,us:pack("us"),eu:Object.assign(pack("eu"),{selection:S.selEU})});
+  var txt=JSON.stringify({v:2,us:Object.assign(pack("us"),{selection:LS.get("mm.us.selection",null)}),eu:Object.assign(pack("eu"),{selection:LS.get("mm.eu.selection",null)})});
   var done=function(){showBanner("Sauvegarde copiée. Collez-la dans une note ou un e-mail pour la garder.",true)};
   var fallback=function(){var ta=$("backupText");ta.value=txt;ta.focus();ta.select();showBanner("Copiez le texte sélectionné dans le cadre ci-dessous.",true)};
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,fallback)}else fallback();
@@ -762,7 +795,7 @@ $("btnImport").onclick=function(){
       var x=o[m];if(!x)return;var c=MODES[m].cles;
       LS.set(c.port,x.portfolio);LS.set(c.ventes,x.ventes||[]);if(x.settings)LS.set(c.settings,x.settings);
     });
-    if(o.eu&&Array.isArray(o.eu.selection)){S.selEU=o.eu.selection;LS.set("mm.eu.selection",S.selEU)}
+    ["us","eu"].forEach(function(m){if(o[m]&&Array.isArray(o[m].selection))LS.set(MODES[m].selKey,o[m].selection)});
     $("backupText").value="";setMode(MODE.id,true);showBanner("Sauvegarde restaurée.",true);
   }catch(e){showBanner("Ce texte n’est pas une sauvegarde valide de l’appli.",false,true)}
 };
@@ -772,7 +805,7 @@ function bindList(id,sel){
 }
 bindList("board",".row");
 $("orders").addEventListener("click",function(e){
-  var go=e.target.closest("[data-goto]");if(go){showTab(go.getAttribute("data-goto"));if(MODE.id==="eu")setTimeout(function(){$("euSearch").scrollIntoView({behavior:"smooth",block:"center"})},50);return}
+  var go=e.target.closest("[data-goto]");if(go){showTab(go.getAttribute("data-goto"));setTimeout(function(){$("euSearch").scrollIntoView({behavior:"smooth",block:"center"})},50);return}
   var a=e.target.closest("[data-act]");if(a){prefill(a.getAttribute("data-act"),a.getAttribute("data-t"));return}
   var n=e.target.closest(".order");if(n)select(n.getAttribute("data-t"));
 });
@@ -822,7 +855,7 @@ function prefill(op,t){
   var q=op==="vente"?heldQty(t):((S.plan&&S.plan.buys.filter(function(b){return b.t.toUpperCase()===t})[0])||{}).qty||"";
   $("pQty").value=q||"";
   $("pDate").value=today();
-  $("pHint").hidden=false;
+  $("pHint").hidden=true;
   $("pHint").textContent=op==="vente"
     ?"Vente pré-remplie avec toute la ligne et la dernière clôture"+(r?" ("+fmt(r.price)+" "+CUR(t)+")":"")+". Remplacez le prix par celui réellement obtenu, puis enregistrez."
     :"Achat pré-rempli avec la quantité proposée et la dernière clôture ("+(r?fmt(r.price)+" "+CUR(t):"–")+"). Remplacez le prix par celui réellement payé, puis enregistrez.";
@@ -878,6 +911,14 @@ $("portfolio").addEventListener("click",function(e){
   });
 });
 
+/* ---------- boutons « i » ---------- */
+document.addEventListener("click",function(e){
+  var b=e.target.closest(".ibtn");if(!b)return;
+  var id=b.getAttribute("data-info"),zone=b.closest(".detail");
+  var box=(zone&&zone.querySelector('[data-infobox="'+id+'"]'))||document.getElementById(id);if(!box)return;
+  box.hidden=!box.hidden;b.setAttribute("aria-expanded",!box.hidden);
+});
+
 /* ---------- démarrage ---------- */
 /* ---------- marché : S&P 500 ou Europe ---------- */
 function syncInputs(){[["sCapital","capital"],["sLignes","lignes"],["sFx","fx"],["sSortie","sortie"],["topSize","sortie"]].forEach(function(p){$(p[0]).value=S.settings[p[1]]})}
@@ -897,7 +938,14 @@ function setMode(id,force){
   ["us","eu"].forEach(function(m){$("mode-"+m).setAttribute("aria-pressed",m===id)});
   document.querySelectorAll(".univName").forEach(function(e){e.textContent=id==="eu"?"de votre sélection européenne":"du S&P 500"});
   S.settings=Object.assign({},MODE.defauts,LS.get(K("settings"),{}));
-  S.portfolio=LS.get(K("port"),[]);S.ventes=LS.get(K("ventes"),[]);
+  S.portfolio=LS.get(K("port"),[]);S.ventes=LS.get(K("ventes"),[]);S.sel=LS.get(MODE.selKey,null);
+  $("euCap").innerHTML=MODE.caps.map(function(c){return'<option value="'+c[0]+'">'+c[1]+'</option>'}).join("");
+  $("euSearch").value="";
+  $("selTitle").textContent=id==="eu"?"Mes actions européennes":"Mes actions du S&P 500";
+  $("selInfo").textContent=id==="eu"
+    ?"Base : les 600 sociétés du STOXX Europe 600, mise à jour chaque soir. Les cours sont dans la devise de chaque bourse ; les montants à investir et les capitalisations sont convertis en euros."
+    :"Base : les sociétés du S&P 500, mise à jour chaque soir, rangées par secteur. Par défaut, toutes sont sélectionnées. Capitalisations en dollars.";
+  $("euSearch").placeholder=id==="eu"?"Nom, symbole, pays ou secteur":"Nom, symbole ou secteur";
   S.data=null;S.full=null;S.results=[];S.byTicker={};S.ranked=[];S.rang={};S.plan=null;S.selected=null;
   S.checkedAt=LS.get(K("checked"),null);
   syncInputs();setOp($("pOp").value||"achat",false);$("pHint").hidden=true;
@@ -910,10 +958,11 @@ function setMode(id,force){
 }
 ["us","eu"].forEach(function(m){$("mode-"+m).addEventListener("click",function(){setMode(m)})});
 
-function capTxt(c){if(!c)return"";return c>=1e9?fmt(c/1e9,c>=1e11?0:1)+" Md€":fmt(c/1e6,0)+" M€"}
-function capDe(t){var f=S.full;if(!f||!f.base)return null;if(!S.capMap||S.capMap.src!==f){S.capMap={src:f,m:{}};f.base.forEach(function(b){S.capMap.m[b.t]=b.cap||null})}return S.capMap.m[String(t).toUpperCase()]||null}
+function capTxt(c){if(!c)return"";var d=MODE.id==="us"?"$":"€";return c>=1e9?fmt(c/1e9,c>=1e11?0:1)+" Md"+d:fmt(c/1e6,0)+" M"+d}
+function capDe(t){var f=S.full;if(!f)return null;if(!S.capMap||S.capMap.src!==f){S.capMap={src:f,m:{}};baseListe().forEach(function(b){S.capMap.m[b.t]=b.cap||null})}return S.capMap.m[String(t).toUpperCase()]||null}
+function groupeDe(b){return MODE.id==="us"?(b.secteur||"Autre"):(b.pays||"Autre")}
 function euVisibles(){
-  var base=S.full&&S.full.base;if(!base)return[];
+  var base=S.full?baseListe():null;if(!base)return[];
   var q=($("euSearch").value||"").trim().toLowerCase(),f=$("euCap").value,mn=0,mx=Infinity;
   if(f){var p=f.split("-");mn=+p[0]*1e9;mx=p[1]?+p[1]*1e9:Infinity}
   return base.filter(function(b){
@@ -924,24 +973,23 @@ function euVisibles(){
 }
 function renderEU(){
   var c=$("euCount");
-  if(MODE.id!=="eu")return;
-  var base=S.full&&S.full.base;
-  c.textContent=S.selEU.length+" sélectionnée"+(S.selEU.length>1?"s":"");
+  var base=S.full?baseListe():null,nSel=SEL().length;
+  c.textContent=nSel+" sélectionnée"+(nSel>1?"s":"");
   if(!base){$("euList").innerHTML='<p class="small muted">La base s’affichera après la première mise à jour des données européennes.</p>';return}
-  var vis=euVisibles(),dispoVis=vis.filter(function(b){return b.ok!==false}),sel={};S.selEU.forEach(function(t){sel[t]=1});
+  var vis=euVisibles(),dispoVis=vis.filter(function(b){return b.ok!==false}),sel={};SEL().forEach(function(t){sel[t]=1});
   var filtre=!!($("euSearch").value.trim()||$("euCap").value);
-  $("euAll").textContent=filtre?"Ajouter les "+dispoVis.length+" affichées":"Tout le STOXX 600";
+  $("euAll").textContent=filtre?"Ajouter les "+dispoVis.length+" affichées":(MODE.id==="eu"?"Tout le STOXX 600":"Tout le S&P 500");
   $("euAll").disabled=!dispoVis.length;
   var sansCap=base.filter(function(b){return!b.cap}).length;
   if(!vis.length){$("euList").innerHTML='<p class="small muted">Aucune action ne correspond.</p>';return}
   var groupes={},ordre=[],tri=$("euTri").value;
-  vis.forEach(function(b){var g=b.pays||"Autre";if(!groupes[g]){groupes[g]=[];ordre.push(g)}groupes[g].push(b)});
+  vis.forEach(function(b){var g=groupeDe(b);if(!groupes[g]){groupes[g]=[];ordre.push(g)}groupes[g].push(b)});
   ordre.sort(function(a,b){return groupes[b].length-groupes[a].length||a.localeCompare(b,"fr")});
   ordre.forEach(function(g){groupes[g].sort(tri==="cap"?function(a,b){return(b.cap||0)-(a.cap||0)||a.n.localeCompare(b.n,"fr")}:function(a,b){return a.n.localeCompare(b.n,"fr")})});
   $("euList").innerHTML=(filtre&&$("euCap").value&&sansCap?'<p class="small muted">'+sansCap+' action'+(sansCap>1?"s":"")+' sans capitalisation connue '+(sansCap>1?"sont masquées":"est masquée")+' par ce filtre.</p>':"")+ordre.map(function(g){
     var lst=groupes[g],dispo=lst.filter(function(b){return b.ok!==false}),nb=dispo.filter(function(b){return sel[b.t]}).length,tout=nb===dispo.length&&dispo.length>0;
     var horsPEA=g==="Royaume-Uni"||g==="Suisse";
-    return'<div class="grp"><div class="grp-head"><h3>'+esc(g)+' <span class="muted small">'+nb+' / '+dispo.length+(lst[0]&&lst[0].cur&&lst[0].cur!=="EUR"?" · "+esc(lst[0].cur):"")+(horsPEA?" · hors PEA":"")+'</span></h3>'+
+    return'<div class="grp"><div class="grp-head"><h3>'+esc(g)+' <span class="muted small">'+nb+' / '+dispo.length+(MODE.id==="eu"&&lst[0]&&lst[0].cur&&lst[0].cur!=="EUR"?" · "+esc(lst[0].cur):"")+(horsPEA?" · hors PEA":"")+'</span></h3>'+
       '<button class="linkbtn" style="color:var(--ink)" data-grp="'+esc(g)+'" data-all="'+(tout?0:1)+'">'+(tout?"Tout retirer":"Tout ajouter")+'</button></div><div class="items">'+
       lst.map(function(b){
         var on=!!sel[b.t],off=b.ok===false;
@@ -952,30 +1000,34 @@ function renderEU(){
   }).join("");
 }
 function setSelection(list){
-  S.selEU=list;LS.set("mm.eu.selection",S.selEU);
+  var avant=SEL().length;
+  S.sel=list;LS.set(MODE.selKey,S.sel);
+  if(list.length!==avant){   /* règle de base : classement = 10 % des actions sélectionnées */
+    S.settings.sortie=tailleAuto(list.length);LS.set(K("settings"),S.settings);syncInputs();
+  }
   if(S.full){try{ingest(S.full)}catch(e){renderAll()}}
   renderEU();
 }
 $("euList").addEventListener("change",function(e){
   var cb=e.target.closest("input[type=checkbox]");if(!cb)return;
-  var t=cb.getAttribute("data-t"),l=S.selEU.filter(function(x){return x!==t});
+  var t=cb.getAttribute("data-t"),l=SEL().filter(function(x){return x!==t});
   if(cb.checked)l.push(t);
   setSelection(l);
 });
 $("euList").addEventListener("click",function(e){
   var g=e.target.closest("[data-grp]");if(!g||!S.full)return;
   var nom=g.getAttribute("data-grp"),ajout=g.getAttribute("data-all")==="1";
-  var ts=euVisibles().filter(function(b){return(b.pays||"Autre")===nom&&b.ok!==false}).map(function(b){return b.t});
-  var l=S.selEU.filter(function(x){return ts.indexOf(x)<0});
+  var ts=euVisibles().filter(function(b){return groupeDe(b)===nom&&b.ok!==false}).map(function(b){return b.t});
+  var l=SEL().filter(function(x){return ts.indexOf(x)<0});
   if(ajout)l=l.concat(ts);
   setSelection(l);
 });
 $("euSearch").addEventListener("input",renderEU);
 $("euAll").onclick=function(){if(!S.full||!S.full.base)return;
-  var aj=euVisibles().filter(function(b){return b.ok!==false}).map(function(b){return b.t}),deja={};S.selEU.forEach(function(t){deja[t]=1});
-  setSelection(S.selEU.concat(aj.filter(function(t){return!deja[t]})))};
+  var aj=euVisibles().filter(function(b){return b.ok!==false}).map(function(b){return b.t}),deja={};SEL().forEach(function(t){deja[t]=1});
+  setSelection(SEL().concat(aj.filter(function(t){return!deja[t]})))};
 $("euCap").addEventListener("change",renderEU);$("euTri").addEventListener("change",renderEU);
-$("euNone").onclick=function(){if(S.selEU.length&&confirm("Retirer les "+S.selEU.length+" actions sélectionnées ?"))setSelection([])};
+$("euNone").onclick=function(){var n=SEL().length;if(n&&confirm("Retirer les "+n+" actions sélectionnées ?"))setSelection([])};
 
 showTab(location.hash.slice(1)||LS.get("mm.tab","ordres"));
 setMode(MODE.id,true);

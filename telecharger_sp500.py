@@ -31,6 +31,21 @@ def liste_sp500():
     return table[["Ticker", "Security", "GICS Sector"]]
 
 
+SECTEURS_GICS = {"Information Technology": "Technologie", "Health Care": "Santé", "Financials": "Finance",
+                 "Consumer Discretionary": "Consommation discrétionnaire", "Communication Services": "Communication",
+                 "Industrials": "Industrie", "Consumer Staples": "Consommation de base", "Energy": "Énergie",
+                 "Utilities": "Services aux collectivités", "Real Estate": "Immobilier", "Materials": "Matériaux"}
+
+
+def anciennes_actions(fichier):
+    """Nombre d'actions enregistré la veille, pour ne rien perdre si Yahoo ne répond pas."""
+    try:
+        with open(fichier, encoding="utf-8") as f:
+            return {b["t"]: b.get("shares") for b in json.load(f).get("base", []) if b.get("shares")}
+    except Exception:
+        return {}
+
+
 def sp500():
     societes = liste_sp500()
     tickers = societes["Ticker"].tolist()
@@ -41,21 +56,31 @@ def sp500():
         auto_adjust=True, progress=False, threads=True,
     )["Close"]
     cours = cours.dropna(how="all").tail(NB_JOURS)
+    actions = nombre_actions([t for t in tickers if t in cours.columns], anciennes_actions(SORTIE))
 
-    series = {}
+    series, base = {}, []
     for _, ligne in societes.iterrows():
         t = ligne["Ticker"]
+        secteur = SECTEURS_GICS.get(ligne["GICS Sector"], ligne["GICS Sector"])
+        b = {"t": t, "n": ligne["Security"], "pays": "États-Unis", "secteur": secteur, "cur": "USD", "ok": False}
+        base.append(b)
         if t not in cours.columns:
             continue
         valeurs = [None if pd.isna(v) else round(float(v), 2) for v in cours[t]]
         if sum(v is not None for v in valeurs) < 220:
             continue
-        series[t] = {"n": ligne["Security"], "s": ligne["GICS Sector"], "c": valeurs}
+        b["ok"] = True
+        series[t] = {"n": ligne["Security"], "s": secteur, "c": valeurs}
+        dernier = next((v for v in reversed(valeurs) if v is not None), None)
+        if actions.get(t) and dernier:
+            b["shares"] = actions[t]
+            b["cap"] = round(actions[t] * dernier)   # en dollars
 
     donnees = {
         "source": "S&P 500 (Yahoo Finance)",
         "genere_le": datetime.now(timezone.utc).isoformat(timespec="minutes"),
         "dates": [d.strftime("%Y-%m-%d") for d in cours.index],
+        "base": base,
         "series": series,
     }
     if len(series) < 400:
@@ -204,13 +229,7 @@ def europe():
         print(f"  taux de change indisponibles : {e}")
 
     # capitalisation = nombre d'actions × dernier cours, convertie en euros
-    anciennes = {}
-    try:
-        with open(SORTIE_EUROPE, encoding="utf-8") as f:
-            anciennes = {b["t"]: b.get("shares") for b in json.load(f).get("base", []) if b.get("shares")}
-    except Exception:
-        pass
-    actions = nombre_actions([b["t"] for b in base if b["t"] in cours.columns], anciennes)
+    actions = nombre_actions([b["t"] for b in base if b["t"] in cours.columns], anciennes_actions(SORTIE_EUROPE))
 
     def arrondi(v):
         return round(v, 2) if v >= 100 else round(v, 3) if v >= 1 else round(v, 4)
