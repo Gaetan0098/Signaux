@@ -18,7 +18,7 @@ import pandas as pd
 import requests
 import yfinance as yf
 
-NB_JOURS = 300  # 200 jours pour la MM200 + marge pour détecter les croisements
+NB_JOURS = 450  # 200 jours pour la MM200 + 250 séances d’historique du classement
 SORTIE = "data/donnees_bourse.json"
 
 
@@ -36,7 +36,7 @@ def main():
     print(f"{len(tickers)} actions trouvées, téléchargement des cours…")
 
     cours = yf.download(
-        tickers, period="16mo", interval="1d",
+        tickers, period="2y", interval="1d",
         auto_adjust=True, progress=True, threads=True,
     )["Close"]
     cours = cours.dropna(how="all").tail(NB_JOURS)

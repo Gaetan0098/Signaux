@@ -337,7 +337,7 @@ function analyse(t,serie,dates){
   var m20=sma(c,20),m200=sma(c,200),L=c.length-1;if(m200[L]==null)return null;
   var crossIdx=-1,crossType=null;
   for(var i=L;i>0;i--){if(m200[i-1]==null)break;var a=m20[i]-m200[i],b=m20[i-1]-m200[i-1];if((a>0)!==(b>0)){crossIdx=i;crossType=a>0?"haussier":"baissier";break}}
-  return{t:t,n:serie.n||t,s:serie.s||"",closes:c,dates:d,m20:m20,m200:m200,price:c[L],ma20:m20[L],ma200:m200[L],
+  return{t:t,n:serie.n||t,s:serie.s||"",off:f.start,closes:c,dates:d,m20:m20,m200:m200,price:c[L],ma20:m20[L],ma200:m200[L],
     ratio:m20[L]/m200[L],up:m20[L]>m200[L],crossType:crossType,crossAgo:crossIdx<0?null:L-crossIdx,crossDate:crossIdx<0?null:d[crossIdx],
     mom:c.length>252?c[L-21]/c[L-252]-1:null};
 }
@@ -373,6 +373,43 @@ function statusOf(t){
 }
 
 /* ---------- données ---------- */
+/* Pour chaque séance : rang de chaque action parmi celles dont la MM20 est au-dessus de la MM200 */
+function computeTopHistory(){
+  if(!S.data)return;
+  var G=S.data.dates.length,N=S.settings.sortie,seaux=[],premier=G;
+  for(var g=0;g<G;g++)seaux.push([]);
+  S.results.forEach(function(r){
+    r.top=new Uint8Array(G);
+    for(var i=0;i<r.closes.length;i++){
+      var a=r.m20[i],b=r.m200[i];if(b==null)continue;
+      var g2=r.off+i;if(g2<premier)premier=g2;
+      if(a>b)seaux[g2].push([a/b,r]);
+    }
+  });
+  seaux.forEach(function(lst,g){lst.sort(function(x,y){return y[0]-x[0]});for(var k=0;k<lst.length&&k<N;k++)lst[k][1].top[g]=1});
+  S.premierRang=premier;
+  S.results.forEach(function(r){
+    var k=G-1,info={};
+    if(r.top[k]){
+      while(k>premier&&r.top[k-1])k--;
+      info={dedans:true,entree:k,auMoins:k<=premier};
+    }else{
+      while(k>=premier&&!r.top[k])k--;
+      if(k>=premier){var fin=k;while(k>premier&&r.top[k-1])k--;info={dedans:false,entree:k,sortie:fin+1,auMoins:k<=premier}}
+      else info={dedans:false,jamais:true};
+    }
+    r.topInfo=info;
+  });
+}
+function topTexte(r){
+  var i=r.topInfo,N=S.settings.sortie,D=S.data.dates,G=D.length;if(!i)return"";
+  var j=function(g){return new Date(D[g]+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})};
+  if(i.jamais)return"Pas dans le top "+N+" depuis le "+j(S.premierRang)+" (début de l’historique disponible).";
+  if(i.dedans)return i.auMoins?"Dans le top "+N+" depuis au moins le "+j(i.entree)+" (début de l’historique disponible).":
+    "Entrée dans le top "+N+" le "+j(i.entree)+" (il y a "+(G-1-i.entree)+" séance"+(G-1-i.entree>1?"s":"")+").";
+  return(i.auMoins?"Dans le top "+N+" depuis au moins le "+j(i.entree):"Entrée dans le top "+N+" le "+j(i.entree))+", sortie le "+j(i.sortie)+".";
+}
+
 function ingest(data){
   if(!data||!Array.isArray(data.dates)||!data.series||typeof data.series!=="object")throw new Error("Le fichier de données est illisible. Vérifiez le dernier passage du script dans l’onglet Actions de GitHub.");
   var res=[];Object.keys(data.series).forEach(function(t){var r=analyse(t,data.series[t],data.dates);if(r)res.push(r)});
@@ -381,6 +418,7 @@ function ingest(data){
   S.data=data;S.results=res;S.byTicker={};res.forEach(function(r){S.byTicker[r.t.toUpperCase()]=r});
   S.ranked=res.filter(function(r){return r.up});
   S.rang={};S.ranked.forEach(function(r,i){S.rang[r.t.toUpperCase()]=i+1});
+  computeTopHistory();
   computePlan();
   if(!S.selected||!S.byTicker[S.selected])S.selected=(S.plan.buys[0]||S.ranked[0]||res[0]).t.toUpperCase();
   renderAll();
@@ -469,8 +507,14 @@ function chartSVG(r){
   var g="";for(var k=0;k<=4;k++){var v=lo+(hi-lo)*k/4;g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--line)"/><text x="'+(W-pr+6)+'" y="'+(y(v)+4)+'" font-size="11" fill="var(--muted)">'+fmt(v,v<20?2:0)+'</text>'}
   var dl=function(i){return new Date(r.dates[s+i]+"T12:00:00").toLocaleDateString("fr-FR",{month:"short",year:"2-digit"})};
   [0,Math.floor(N/2),N-1].forEach(function(i,j){g+='<text x="'+x(i)+'" y="'+(H-6)+'" font-size="11" fill="var(--muted)" text-anchor="'+["start","middle","end"][j]+'">'+dl(i)+'</text>'});
+  var vb="",ti=r.topInfo;
+  var barre=function(g,col,dash,txt){var xi=g-r.off-s;if(xi<0||xi>N-1)return"";var X=x(xi).toFixed(1);
+    return'<line x1="'+X+'" x2="'+X+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="'+col+'" stroke-width="2"'+(dash?' stroke-dasharray="4 3"':'')+' opacity=".85"/>'+
+      '<text x="'+(+X+(xi>N*0.8?-4:4))+'" y="'+(pt+10)+'" font-size="11" font-weight="700" fill="'+col+'" text-anchor="'+(xi>N*0.8?"end":"start")+'">'+txt+'</text>'};
+  if(ti&&!ti.jamais&&!ti.auMoins)vb+=barre(ti.entree,"var(--buy)",false,"Top "+S.settings.sortie);
+  if(ti&&ti.sortie!=null)vb+=barre(ti.sortie,"var(--sell)",true,"Sortie");
   var mk="";if(r.crossAgo!=null&&r.crossAgo<N){var ci=N-1-r.crossAgo;mk='<circle cx="'+x(ci)+'" cy="'+y(A[ci])+'" r="5" fill="none" stroke="'+(r.crossType==="haussier"?"var(--buy)":"var(--sell)")+'" stroke-width="2"/>'}
-  return'<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Cours, MM20 et MM200 de '+esc(r.t)+' sur '+N+' séances">'+g+line(B,"var(--mm200)",2)+line(A,"var(--mm20)",2)+line(P,"var(--price)",1.4)+mk+'</svg>';
+  return'<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Cours, MM20 et MM200 de '+esc(r.t)+' sur '+N+' séances">'+g+line(B,"var(--mm200)",2)+line(A,"var(--mm20)",2)+line(P,"var(--price)",1.4)+mk+vb+'</svg>';
 }
 function renderDetail(){
   var el={set innerHTML(h){$("detail").innerHTML=h;$("sheetBody").innerHTML=h}},t=S.selected,r=S.byTicker[t];
@@ -491,7 +535,8 @@ function renderDetail(){
     '<span class="pill '+st.k+'">'+st.l+'</span></div>'+
     '<div class="kv"><div><span>MM20</span><b>'+fmt(r.ma20)+'</b></div><div><span>MM200</span><b>'+fmt(r.ma200)+'</b></div><div><span>Ratio</span><b>'+fmt(r.ratio,3)+'</b></div></div>'+
     '<div class="chart">'+chartSVG(r)+'</div>'+
-    '<div class="legend"><span><i style="background:var(--price)"></i>Cours</span><span><i style="background:var(--mm20)"></i>MM20</span><span><i style="background:var(--mm200)"></i>MM200</span></div>'+
+    '<div class="legend"><span><i style="background:var(--price)"></i>Cours</span><span><i style="background:var(--mm20)"></i>MM20</span><span><i style="background:var(--mm200)"></i>MM200</span><span><i style="background:var(--buy);width:3px;height:12px"></i>Entrée top '+S.settings.sortie+'</span></div>'+
+    '<p class="small" style="margin-top:8px"><strong>'+esc(topTexte(r))+'</strong></p>'+
     '<ul class="reasons">'+why.map(function(w){return"<li>"+esc(w)+"</li>"}).join("")+'</ul>'+
     (st.k==="buy"?'<div class="actbar"><button class="pill buy" data-act="achat" data-t="'+esc(r.t)+'">Acheter</button></div>':
      st.k==="sell"?'<div class="actbar"><button class="pill sell" data-act="vente" data-t="'+esc(r.t)+'">Vendre</button></div>':"")+
@@ -728,7 +773,7 @@ $("portfolio").addEventListener("click",function(e){
     if(!(v>0)){inp.value=S.settings[p[1]];return}
     if(p[1]==="sortie"){v=Math.round(v);if(v<S.settings.lignes){v=S.settings.lignes;showBanner("Le seuil de sortie ne peut pas être inférieur au nombre de lignes ("+v+"), sinon des actions tout juste achetées seraient revendues.",false,true)}inp.value=v}
     if(p[1]==="lignes"){v=Math.round(v);inp.value=v;if(v<10)showBanner("Moins de 10 lignes : le backtest montre un risque bien plus élevé (pire chute de −48 % avec 5 lignes).",false,true)}
-    S.settings[p[1]]=v;LS.set("mm.pur.settings",S.settings);renderAll();
+    S.settings[p[1]]=v;LS.set("mm.pur.settings",S.settings);if(p[1]==="sortie")computeTopHistory();renderAll();
   });
 });
 
