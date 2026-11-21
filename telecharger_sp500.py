@@ -88,6 +88,10 @@ SECTEURS = {"Industrial Goods and Services": "Industrie", "Banks": "Banques", "H
             "Travel and Leisure": "Voyages et loisirs", "Retail": "Commerce", "Media": "Médias"}
 
 
+SYMBOLES_FORCES = {"MT.PA": "MT.AS"}   # ArcelorMittal : Yahoo n'a l'historique que sur Amsterdam
+EURONEXT_SUFFIXES = [".PA", ".AS", ".BR", ".LS", ".IR"]
+
+
 def symbole_yahoo(ticker, place, pays):
     t = str(ticker).strip()
     if place == "Euronext":
@@ -99,7 +103,7 @@ def symbole_yahoo(ticker, place, pays):
     if suffixe == ".L":
         t = t.rstrip(".").replace(".", "-")        # « BP. » -> BP.L ; « BT.A » -> BT-A.L
     t = t.replace(" ", "-")                        # « NOVO B » -> NOVO-B.CO ; « NDA FI » -> NDA-FI.HE
-    return t + suffixe, devise
+    return SYMBOLES_FORCES.get(t + suffixe, t + suffixe), devise
 
 
 def stoxx600():
@@ -148,7 +152,7 @@ def europe():
     """Télécharge les ~600 actions du STOXX Europe 600 (liste lue chaque soir sur Wikipedia).
     Chacun choisit ensuite dans l'appli celles qu'il veut suivre."""
     base = stoxx600()
-    tickers = [b["t"] for b in base]
+    tickers = list(dict.fromkeys(b["t"] for b in base))
     print(f"Europe : {len(tickers)} actions du STOXX Europe 600, téléchargement des cours…")
     morceaux = []
     for k in range(0, len(tickers), 100):
@@ -158,11 +162,39 @@ def europe():
             df = df.to_frame(lot[0])
         morceaux.append(df)
     cours = pd.concat(morceaux, axis=1).sort_index().dropna(how="all").tail(NB_JOURS)
+    cours = cours.loc[:, ~cours.columns.duplicated()]
+
+    # actions Euronext sans cours : on essaie les autres places Euronext (Paris, Amsterdam, Bruxelles…)
+    def complet(df, t):
+        return t in df.columns and df[t].notna().sum() >= 220
+    essais = {}
+    for b in base:
+        racine, _, suf = b["t"].rpartition(".")
+        if not complet(cours, b["t"]) and "." + suf in EURONEXT_SUFFIXES:
+            essais[b["t"]] = [racine + s for s in EURONEXT_SUFFIXES if s != "." + suf]
+    if essais:
+        autres = sorted({a for lst in essais.values() for a in lst})
+        try:
+            df2 = yf.download(autres, period="2y", interval="1d", auto_adjust=True, progress=False, threads=True)["Close"]
+            if isinstance(df2, pd.Series):
+                df2 = df2.to_frame(autres[0])
+            df2 = df2.reindex(cours.index)
+            for b in base:
+                for a in essais.get(b["t"], []):
+                    if complet(df2, a):
+                        print(f"  {b['n']} : {b['t']} sans cours, remplacé par {a}")
+                        cours[a] = df2[a]
+                        b["t"] = a
+                        break
+        except Exception as e:
+            print(f"  autres places Euronext indisponibles : {e}")
 
     # taux de change : unités de chaque devise pour 1 euro
     devises = sorted({b["cur"] for b in base} - {"EUR"})
     fx = {"EUR": 1.0}
     try:
+        if not devises:
+            raise RuntimeError("aucune devise hors euro")
         taux = yf.download([f"EUR{d}=X" for d in devises], period="5d", progress=False)["Close"].ffill().iloc[-1]
         for d in devises:
             v = float(taux[f"EUR{d}=X"])
@@ -178,7 +210,7 @@ def europe():
             anciennes = {b["t"]: b.get("shares") for b in json.load(f).get("base", []) if b.get("shares")}
     except Exception:
         pass
-    actions = nombre_actions([t for t in tickers if t in cours.columns], anciennes)
+    actions = nombre_actions([b["t"] for b in base if b["t"] in cours.columns], anciennes)
 
     def arrondi(v):
         return round(v, 2) if v >= 100 else round(v, 3) if v >= 1 else round(v, 4)
