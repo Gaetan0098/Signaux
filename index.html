@@ -174,6 +174,28 @@ select{font:inherit;color:inherit;background:var(--surface);border:1px solid var
 .univ-search{margin:10px 0}
 #univList table td:first-child{white-space:normal;min-width:11rem}
 #univList .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+header.top{display:block}
+.toprow{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.toprow h1{font-size:clamp(1.35rem,4.6vw,2.3rem);white-space:nowrap}
+.subrow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px}
+.subrow .status{margin:0}
+.seg{display:inline-flex;flex:none;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;border-radius:999px;padding:6px 12px;font-size:.85rem;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button:hover{border:0}
+@media (max-width:380px){.seg button{padding:5px 9px;font-size:.78rem}}
+.eusel .grp{margin-top:14px}
+.eusel .grp-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.eusel .grp-head h3{margin:0;font-size:.95rem}
+.eusel .items{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+.eusel .item{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:.88rem;color:var(--ink);cursor:pointer;flex-direction:row}
+.eusel .item input{width:auto;margin:0}
+.eusel .item.on{background:var(--buy-bg);border-color:transparent}
+.eusel .item.off{opacity:.5;cursor:not-allowed}
+.eusel .item small{color:var(--muted)}
+.eu-only{display:none}
+body[data-mode="eu"] .eu-only{display:block}
+body[data-mode="eu"] .us-only{display:none}
 /* fiche détail (mobile) */
 .sheet{position:fixed;inset:0;z-index:30;background:rgba(10,18,30,.45);display:flex;align-items:flex-end}
 .sheet[hidden]{display:none}
@@ -188,11 +210,15 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
 <body>
 <div class="wrap">
   <header class="top">
-    <div>
+    <div class="toprow">
       <h1>Road to Million</h1>
-      <p class="status muted" id="status">Aucune donnée chargée.</p>
+      <div class="seg" role="group" aria-label="Marché">
+        <button id="mode-us" data-mode="us" aria-pressed="true">S&amp;P 500</button>
+        <button id="mode-eu" data-mode="eu" aria-pressed="false">Europe</button>
+      </div>
     </div>
-    <div class="actions">
+    <div class="subrow">
+      <p class="status muted" id="status">Aucune donnée chargée.</p>
       <button class="primary" id="btnUpdate">Mise à jour</button>
     </div>
   </header>
@@ -255,9 +281,16 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
           <div class="settings">
             <label>Capital du portefeuille (€)<input type="number" id="sCapital" step="100" min="0"></label>
             <label>Nombre de lignes<input type="number" id="sLignes" step="1" min="1"></label>
-            <label>Taux EUR/USD (1 € = … $)<input type="number" id="sFx" step="0.01" min="0.5"></label>
+            <label class="us-only">Taux EUR/USD (1 € = … $)<input type="number" id="sFx" step="0.01" min="0.5"></label>
             <label>Vendre si l’action sort du top…<input type="number" id="sSortie" step="1" min="1"></label>
           </div>
+        </div>
+        <div class="panel eu-only eusel" style="margin-top:16px">
+          <div class="panel-head"><h2>Mes actions européennes</h2><span class="muted small" id="euCount"></span></div>
+          <p class="small muted">Base : les 600 sociétés du STOXX Europe 600, mise à jour chaque soir. Cochez celles à suivre : elles forment votre classement et vos ordres en mode Europe. Les cours sont dans la devise de chaque bourse ; les montants à investir sont convertis depuis l’euro.</p>
+          <div class="row2" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"><button id="euAll">Tout le STOXX 600</button><button id="euNone">Tout désélectionner</button></div>
+          <label class="univ-search">Rechercher<input id="euSearch" type="search" placeholder="Nom, symbole, pays ou secteur"></label>
+          <div id="euList"><p class="small muted">La base s’affichera après la première mise à jour.</p></div>
         </div>
         <div class="panel" style="margin-top:16px">
           <div class="panel-head"><h2>Actions prises en compte</h2><span class="muted small" id="univCount"></span></div>
@@ -280,9 +313,10 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
         <div class="panel" style="margin-top:16px">
           <div class="panel-head"><h2>La règle</h2></div>
           <div class="rules" style="margin-top:0">
-            <p><strong>La règle :</strong> parmi les actions du S&amp;P 500 dont la MM20 est au-dessus de la MM200, on achète celles qui ont le ratio MM20/MM200 le plus élevé, à parts égales, tant qu’il reste des places. On garde chaque action tant qu’elle reste dans les 50 meilleurs ratios (réglable) ; on la vend dès que l’une de ces conditions est remplie : elle sort de ce top 50, sa MM20 repasse sous sa MM200, ou elle quitte l’indice. Pas de stop.</p>
+            <p><strong>La règle :</strong> parmi les actions <span class="univName">du S&amp;P 500</span> dont la MM20 est au-dessus de la MM200, on achète celles qui ont le ratio MM20/MM200 le plus élevé, à parts égales, tant qu’il reste des places. On garde chaque action tant qu’elle reste dans les 50 meilleurs ratios (réglable) ; on la vend dès que l’une de ces conditions est remplie : elle sort de ce top 50, sa MM20 repasse sous sa MM200, ou elle quitte l’indice. Pas de stop.</p>
             <p><strong>Quand agir :</strong> les signaux sont calculés sur les cours de clôture ; les ordres se passent à l’ouverture de la séance suivante, comme dans le backtest.</p>
             <p><strong>Momentum 12 mois :</strong> affiché pour information (hausse sur 12 mois, hors dernier mois). Il n’entre pas dans les signaux : son utilité n’a pas été démontrée par le test.</p>
+            <p class="note eu-only"><strong>Mode Europe : le backtest a été fait uniquement sur le S&amp;P 500.</strong> Rien ne garantit que la règle se comporte pareil sur votre sélection européenne, ni sur un petit nombre d’actions. Les sociétés britanniques et suisses ne sont en principe pas éligibles au PEA.</p>
             <p class="note"><strong>Attention : la vente à la sortie du top 50 n’a pas été testée.</strong> Les chiffres qui suivent concernent la règle d’origine (vente uniquement au croisement baissier). Ce que le backtest a montré : en 2021-2024, +23,6 %/an contre +13,9 % pour l’indice, avec une pire chute de −28 %. En validation 2025-2026, +18,3 %/an contre +10,3 %, mais une chute de −47 % à un moment donné. Le rendement supplémentaire se paie par un risque nettement plus élevé. En dessous de 10 lignes, le risque augmente fortement.</p>
           </div>
         </div>
@@ -315,10 +349,33 @@ var LS={
   set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},
   del:function(k){try{localStorage.removeItem(k)}catch(e){}}
 };
-var DEFAULTS={capital:10000,lignes:10,fx:1.15,sortie:50};
-var S={data:null,results:[],byTicker:{},ranked:[],plan:null,selected:null,checkedAt:null,
-  settings:Object.assign({},DEFAULTS,LS.get("mm.pur.settings",{})),
-  portfolio:LS.get("mm.portfolio",[]),ventes:LS.get("mm.ventes",[])};
+var MODES={
+  us:{id:"us",nom:"S&P 500",cur:"$",fichier:"data/donnees_bourse.json",
+      cles:{data:"mm.data",port:"mm.portfolio",ventes:"mm.ventes",settings:"mm.pur.settings",checked:"mm.checked"},
+      defauts:{capital:10000,lignes:10,fx:1.15,sortie:50}},
+  eu:{id:"eu",nom:"Europe",cur:"€",fichier:"data/donnees_europe.json",
+      cles:{data:"mm.eu.data",port:"mm.eu.portfolio",ventes:"mm.eu.ventes",settings:"mm.eu.settings",checked:"mm.eu.checked"},
+      defauts:{capital:10000,lignes:10,fx:1,sortie:50}}
+};
+var MODE=MODES[LS.get("mm.mode","us")]||MODES.us;
+function K(k){return MODE.cles[k]}
+var SYM={USD:"$",EUR:"€",GBP:"£",CHF:"CHF",SEK:"SEK",DKK:"DKK",NOK:"NOK",PLN:"PLN"};
+function devise(t){
+  if(MODE.id==="us")return"USD";
+  t=String(t||"").toUpperCase();var f=S&&S.full;
+  if(f&&f.series&&f.series[t]&&f.series[t].cur)return f.series[t].cur;
+  if(f&&f.base){for(var i=0;i<f.base.length;i++)if(f.base[i].t===t)return f.base[i].cur||"EUR"}
+  return"EUR";
+}
+function CUR(t){if(MODE.id==="us")return"$";if(!t)return"€";var d=devise(t);return SYM[d]||d}
+function HCUR(){return MODE.id==="us"?" ($)":""}          /* devise dans les titres de colonnes */
+function fxOf(t){if(MODE.id==="us")return S.settings.fx;var f=S.full&&S.full.fx;return(f&&f[devise(t)])||1}   /* unités de devise pour 1 € */
+function enEuros(v,t){return v==null?null:MODE.id==="us"?v:v/fxOf(t)}
+var S={data:null,full:null,results:[],byTicker:{},ranked:[],rang:{},plan:null,selected:null,checkedAt:null,
+  settings:Object.assign({},MODE.defauts,LS.get(K("settings"),{})),
+  portfolio:LS.get(K("port"),[]),ventes:LS.get(K("ventes"),[]),
+  selEU:LS.get("mm.eu.selection",[])};
+var DEFAULTS=MODE.defauts;
 var $=function(id){return document.getElementById(id)};
 var fmt=function(v,d){return v==null||isNaN(v)?"–":v.toLocaleString("fr-FR",{minimumFractionDigits:d==null?2:d,maximumFractionDigits:d==null?2:d})};
 var pct=function(v){return v==null||isNaN(v)?"–":(v>=0?"+":"")+fmt(v*100,1)+" %"};
@@ -344,7 +401,7 @@ function analyse(t,serie,dates){
 function heldTickers(){var seen={},out=[];S.portfolio.forEach(function(p){var t=p.t.toUpperCase();if(!seen[t]){seen[t]=1;out.push(t)}});return out}
 function sellReason(t){
   var r=S.byTicker[t];
-  if(!r)return"N’est plus dans le S&P 500 : la règle vend.";
+  if(!r)return MODE.id==="eu"?"N’est plus dans votre sélection européenne (ou plus de cours) : la règle vend.":"N’est plus dans le S&P 500 : la règle vend.";
   if(!r.up)return"Croisement baissier : la MM20 ("+fmt(r.ma20)+") est passée sous la MM200 ("+fmt(r.ma200)+").";
   var rg=S.rang[t];
   if(rg>S.settings.sortie)return"Sortie du top "+S.settings.sortie+" : classée "+rg+"e sur les ratios MM20/MM200.";
@@ -358,7 +415,7 @@ function computePlan(){
   var cands=S.ranked.filter(function(r){return!heldSet[r.t.toUpperCase()]&&S.rang[r.t.toUpperCase()]<=S.settings.sortie});
   var buys=cands.slice(0,libres),wait=cands.slice(libres,libres+5);
   var parLigneEUR=S.settings.capital/S.settings.lignes;
-  buys.forEach(function(r){r.qty=Math.floor(parLigneEUR*S.settings.fx/r.price)});
+  buys.forEach(function(r){r.qty=Math.floor(parLigneEUR*fxOf(r.t)/r.price)});
   S.plan={sells:sells,keeps:keeps,buys:buys,wait:wait,libres:libres,parLigneEUR:parLigneEUR,held:heldSet};
 }
 function statusOf(t){
@@ -408,35 +465,44 @@ function topTexte(r){
   return(i.auMoins?"Dans le top "+N+" depuis au moins le "+j(i.entree):"Entrée dans le top "+N+" le "+j(i.entree))+", sortie le "+j(i.sortie)+".";
 }
 
-function ingest(data){
-  if(!data||!Array.isArray(data.dates)||!data.series||typeof data.series!=="object")throw new Error("Le fichier de données est illisible. Vérifiez le dernier passage du script dans l’onglet Actions de GitHub.");
+function ingest(full){
+  if(!full||!Array.isArray(full.dates)||!full.series||typeof full.series!=="object")throw new Error("Le fichier de données est illisible. Vérifiez le dernier passage du script dans l’onglet Actions de GitHub.");
+  S.full=full;
+  var data=full;
+  if(MODE.id==="eu"){
+    var sel={};S.selEU.forEach(function(t){sel[t]=1});
+    var series={};Object.keys(full.series).forEach(function(t){if(sel[t])series[t]=full.series[t]});
+    data={dates:full.dates,series:series,genere_le:full.genere_le};
+  }
   var res=[];Object.keys(data.series).forEach(function(t){var r=analyse(t,data.series[t],data.dates);if(r)res.push(r)});
-  if(!res.length)throw new Error("Aucune action n’a assez d’historique (200 séances minimum).");
+  if(!res.length&&MODE.id!=="eu")throw new Error("Aucune action n’a assez d’historique (200 séances minimum).");
   res.sort(function(a,b){return b.ratio-a.ratio});
   S.data=data;S.results=res;S.byTicker={};res.forEach(function(r){S.byTicker[r.t.toUpperCase()]=r});
   S.ranked=res.filter(function(r){return r.up});
   S.rang={};S.ranked.forEach(function(r,i){S.rang[r.t.toUpperCase()]=i+1});
   computeTopHistory();
   computePlan();
-  if(!S.selected||!S.byTicker[S.selected])S.selected=(S.plan.buys[0]||S.ranked[0]||res[0]).t.toUpperCase();
+  if(!S.selected||!S.byTicker[S.selected]){var d0=S.plan.buys[0]||S.ranked[0]||res[0];S.selected=d0?d0.t.toUpperCase():null}
   renderAll();
 }
 function update(silent){
   var btn=$("btnUpdate");btn.disabled=true;btn.textContent="Mise à jour…";
-  return fetch("data/donnees_bourse.json?t="+Date.now(),{cache:"no-store"})
+  var m=MODE;
+  return fetch(m.fichier+"?t="+Date.now(),{cache:"no-store"})
     .then(function(r){
-      if(r.status===404)throw new Error("Pas encore de données : le script ne s’est pas encore exécuté. Lancez-le une première fois depuis l’onglet Actions de GitHub.");
+      if(r.status===404)throw new Error(m.id==="eu"?"Pas encore de données européennes : mettez à jour le script sur GitHub, puis lancez « Mise à jour des cours » depuis l’onglet Actions.":"Pas encore de données : le script ne s’est pas encore exécuté. Lancez-le une première fois depuis l’onglet Actions de GitHub.");
       if(!r.ok)throw new Error("Le serveur a répondu "+r.status+". Réessayez dans quelques minutes.");
       return r.json();
     })
     .then(function(data){
-      var before=S.data&&S.data.genere_le;
+      if(m!==MODE)return;   /* on a changé de marché entre-temps */
+      var before=S.full&&S.full.genere_le;
       ingest(data);S.checkedAt=Date.now();
-      if(!LS.set("mm.data",data))LS.del("mm.data");
-      LS.set("mm.checked",S.checkedAt);renderStatus();
+      if(!LS.set(K("data"),data))LS.del(K("data"));
+      LS.set(K("checked"),S.checkedAt);renderStatus();
       if(!silent)showBanner(before&&before===data.genere_le?"Déjà à jour : pas de nouvelle séance depuis la dernière mise à jour.":"",true);
     })
-    .catch(function(e){console.log("ERRDBG "+e.stack);var msg=e instanceof TypeError?"Pas de connexion. Les derniers signaux enregistrés restent affichés.":e.message;if(!silent||!S.data)showBanner(msg,false,true)})
+    .catch(function(e){var msg=e instanceof TypeError?"Pas de connexion. Les derniers signaux enregistrés restent affichés.":e.message;if(!silent||!S.data)showBanner(msg,false,true)})
     .then(function(){btn.disabled=false;btn.textContent="Mise à jour"});
 }
 
@@ -447,7 +513,7 @@ function renderStatus(){
   if(!S.data){$("status").textContent="Aucune donnée chargée.";return}
   var last=S.data.dates[S.data.dates.length-1];
   var chk=S.checkedAt?" · vérifié "+new Date(S.checkedAt).toLocaleString("fr-FR",{weekday:"short",hour:"2-digit",minute:"2-digit"}):"";
-  $("status").textContent="Cours de clôture du "+dateFR(last)+chk;
+  $("status").textContent=MODE.nom+" · cours du "+dateFR(last)+chk;
 }
 function orderRow(kind,label,r,t,qtyHtml,why){
   var act=kind==="buy"?"achat":"vente";
@@ -457,6 +523,7 @@ function orderRow(kind,label,r,t,qtyHtml,why){
 }
 function renderOrders(){
   var el=$("orders"),p=S.plan;
+  if(MODE.id==="eu"&&S.full&&!S.selEU.length){el.innerHTML='<p class="empty">Aucune action européenne sélectionnée. <button class="linkbtn" style="color:var(--ink)" data-goto="reglages">Choisir mes actions</button></p>';$("slots").textContent="";return}
   if(!p){el.innerHTML='<p class="empty">Pas encore de données.</p>';$("slots").textContent="";return}
   $("slots").textContent=(S.settings.lignes-p.libres)+" / "+S.settings.lignes+" lignes occupées après ventes";
   var h="";
@@ -470,8 +537,8 @@ function renderOrders(){
   if(p.buys.length){
     h+='<div class="sub">À acheter · ≈ '+fmt(p.parLigneEUR,0)+' € par ligne</div>';
     p.buys.forEach(function(r){
-      var why="Ratio "+fmt(r.ratio,3)+" · cours "+fmt(r.price)+" $"+(r.mom!=null?" · momentum 12 m "+pct(r.mom):"");
-      h+=orderRow("buy","Acheter",r,r.t,r.qty>0?r.qty+" × ≈ "+fmt(r.price)+" $":"1 action > montant par ligne",why);
+      var why="Ratio "+fmt(r.ratio,3)+" · cours "+fmt(r.price)+" "+CUR(r.t)+(r.mom!=null?" · momentum 12 m "+pct(r.mom):"");
+      h+=orderRow("buy","Acheter",r,r.t,r.qty>0?r.qty+" × ≈ "+fmt(r.price)+" "+CUR(r.t):"1 action > montant par ligne",why);
     });
   }
   if(!p.sells.length&&!p.buys.length){
@@ -484,6 +551,7 @@ function renderOrders(){
 }
 function renderBoard(){
   var b=$("board");
+  if(MODE.id==="eu"&&!S.selEU.length){b.innerHTML='<li class="empty">Aucune action européenne sélectionnée : cochez-les dans Réglages.</li>';$("boardInfo").textContent="";return}
   if(!S.ranked.length){b.innerHTML='<li class="empty">Aucune action avec la MM20 au-dessus de la MM200.</li>';return}
   var top=S.ranked.slice(0,50),maxR=top[0].ratio-1;
   $("boardInfo").textContent="Les "+top.length+" meilleurs ratios parmi les "+S.ranked.length+" actions dont la MM20 est au-dessus de la MM200";
@@ -493,7 +561,7 @@ function renderBoard(){
     return '<li class="row" role="option" tabindex="0" data-t="'+esc(r.t)+'" aria-selected="'+(r.t.toUpperCase()===S.selected)+'">'+
       '<span class="rank">'+(i+1)+'</span><div><div>'+libelle(r.t)+'</div>'+
       '<div class="meter" aria-hidden="true"><span style="width:'+w+'%"></span></div>'+
-      '<div class="ratio">MM20/MM200 '+fmt(r.ratio,3)+' · cours '+fmt(r.price)+' $'+(r.mom!=null?' · <span class="info">momentum '+pct(r.mom)+'</span>':'')+'</div></div>'+tag+'</li>';
+      '<div class="ratio">MM20/MM200 '+fmt(r.ratio,3)+' · cours '+fmt(r.price)+' '+CUR(r.t)+(r.mom!=null?' · <span class="info">momentum '+pct(r.mom)+'</span>':'')+'</div></div>'+tag+'</li>';
   }).join("");
 }
 function chartSVG(r){
@@ -517,7 +585,7 @@ function chartSVG(r){
 function renderDetail(){
   var el={set innerHTML(h){$("detail").innerHTML=h;$("sheetBody").innerHTML=h}},t=S.selected,r=S.byTicker[t];
   if(!r){
-    el.innerHTML=t&&S.plan&&S.plan.held[t]?'<h2>'+esc(t)+'</h2><p class="empty">Cette action n’est plus dans le S&P 500 : la règle la vend.</p>':'<p class="empty">Appuyez sur « Mise à jour » : les ordres et le classement s’affichent ici.</p>';
+    el.innerHTML=t&&S.plan&&S.plan.held[t]?'<h2>'+esc(t)+'</h2><p class="empty">Cette action n’est plus dans '+(MODE.id==="eu"?"votre sélection":"le S&amp;P 500")+' : la règle la vend.</p>':'<p class="empty">Appuyez sur « Mise à jour » : les ordres et le classement s’affichent ici.</p>';
     return;
   }
   var st=statusOf(t),rank=S.ranked.indexOf(r),why=[];
@@ -528,7 +596,7 @@ function renderDetail(){
   else why.push("Sa MM20 est sous sa MM200 : la règle ne l’achète pas.");
   if(r.crossType)why.push("Dernier croisement "+r.crossType+" le "+new Date(r.crossDate+"T12:00:00").toLocaleDateString("fr-FR")+".");
   el.innerHTML='<div class="panel-head"><div><h2>'+esc(r.n&&r.n!==r.t?r.n:r.t)+' <span class="muted small">'+(r.n&&r.n!==r.t?"– "+esc(r.t):"")+(r.s?" · "+esc(r.s):"")+'</span></h2>'+
-    '<div class="big">'+fmt(r.price)+' $</div><div class="small muted">'+(rank>=0?"Rang "+(rank+1)+" sur "+S.ranked.length+" actions en tendance":"Hors tendance")+'</div></div>'+
+    '<div class="big">'+fmt(r.price)+' '+CUR(r.t)+'</div><div class="small muted">'+(rank>=0?"Rang "+(rank+1)+" sur "+S.ranked.length+" actions en tendance":"Hors tendance")+'</div></div>'+
     '<span class="pill '+st.k+'">'+st.l+'</span></div>'+
     '<div class="kv"><div><span>MM20</span><b>'+fmt(r.ma20)+'</b></div><div><span>MM200</span><b>'+fmt(r.ma200)+'</b></div><div><span>Ratio</span><b>'+fmt(r.ratio,3)+'</b></div></div>'+
     '<div class="chart">'+chartSVG(r)+'</div>'+
@@ -540,36 +608,36 @@ function renderDetail(){
     '<p class="info" style="margin-top:10px">Momentum 12 mois (information) : '+pct(r.mom)+'</p>';
 }
 function renderPortfolio(){
-  var el=$("portfolio");
+  var el=$("portfolio"),eu=MODE.id==="eu";
   if(!S.portfolio.length){el.innerHTML='<p class="empty">Aucune ligne. Ajoutez vos achats pour que l’appli calcule les ventes et les places libres.</p>';return}
-  var tot=0,cost=0;
+  var tot=0,cost=0,m=function(v,t){return v==null?"–":fmt(v)+(eu?" "+CUR(t):"")};
   var rows=S.portfolio.map(function(p,i){
     var t=p.t.toUpperCase(),r=S.byTicker[t],st=S.data?statusOf(t):null,val=r?r.price*p.q:null,perf=r?r.price/p.price-1:null;
-    if(r){tot+=val;cost+=p.price*p.q}
+    if(r){tot+=enEuros(val,t);cost+=enEuros(p.price*p.q,t)}
     return'<tr><td><button class="linkbtn" style="color:var(--ink);text-align:left" data-sel="'+esc(t)+'">'+libelle(t)+'</button></td>'+
-      '<td class="num">'+fmt(p.q,p.q%1?2:0)+'</td><td class="num">'+fmt(p.price)+'</td><td class="num">'+(r?fmt(r.price):"–")+'</td>'+
-      '<td class="num '+(perf>=0?"pos":"neg")+'">'+pct(perf)+'</td><td class="num">'+fmt(val)+'</td>'+
+      '<td class="num">'+fmt(p.q,p.q%1?2:0)+'</td><td class="num">'+m(p.price,t)+'</td><td class="num">'+(r?m(r.price,t):"–")+'</td>'+
+      '<td class="num '+(perf>=0?"pos":"neg")+'">'+pct(perf)+'</td><td class="num">'+m(val,t)+'</td>'+
       '<td class="num">'+(r?fmt(r.ratio,3):"–")+'</td><td class="num info">'+(r?pct(r.mom):"–")+'</td>'+
       '<td>'+(st?'<span class="pill '+st.k+'">'+st.l+'</span>':"–")+'</td>'+
       '<td><button class="linkbtn" style="color:var(--ink);margin-right:12px" data-act="vente" data-t="'+esc(t)+'">Vendre</button><button class="linkbtn" data-del="'+i+'" aria-label="Annuler l’achat de '+esc(t)+'">Annuler l’achat</button></td></tr>';
   }).join("");
   var tp=cost?tot/cost-1:null;
-  el.innerHTML='<table><thead><tr><th>Action</th><th class="num">Qté</th><th class="num">Prix d’achat ($)</th><th class="num">Cours ($)</th><th class="num">+/-</th><th class="num">Valeur ($)</th><th class="num">Ratio</th><th class="num">Momentum 12 m</th><th>Signal</th><th></th></tr></thead><tbody>'+rows+
-    '</tbody><tfoot><tr><td colspan="4"><strong>Total</strong></td><td class="num '+(tp>=0?"pos":"neg")+'">'+pct(tp)+'</td><td class="num"><strong>'+fmt(tot)+'</strong></td><td colspan="4"></td></tr></tfoot></table>';
+  el.innerHTML='<table><thead><tr><th>Action</th><th class="num">Qté</th><th class="num">Prix d’achat'+HCUR()+'</th><th class="num">Cours'+HCUR()+'</th><th class="num">+/-</th><th class="num">Valeur'+HCUR()+'</th><th class="num">Ratio</th><th class="num">Momentum 12 m</th><th>Signal</th><th></th></tr></thead><tbody>'+rows+
+    '</tbody><tfoot><tr><td colspan="4"><strong>Total</strong>'+(eu?' <span class="info">(converti en € au cours du jour)</span>':'')+'</td><td class="num '+(tp>=0?"pos":"neg")+'">'+pct(tp)+'</td><td class="num"><strong>'+fmt(tot)+(eu?" €":"")+'</strong></td><td colspan="4"></td></tr></tfoot></table>';
 }
 function renderVentes(){
-  var el=$("ventes");
+  var el=$("ventes"),eu=MODE.id==="eu";
   if(!S.ventes.length){el.innerHTML='<p class="small muted">Aucune vente enregistrée.</p>';return}
-  var tot=0;
+  var tot=0,m=function(v,t){return fmt(v)+(eu?" "+CUR(t):"")};
   var rows=S.ventes.slice().reverse().map(function(v,j){
-    var i=S.ventes.length-1-j;tot+=v.res;
+    var i=S.ventes.length-1-j;tot+=enEuros(v.res,v.t);
     return'<tr><td>'+esc(v.d?new Date(v.d+"T12:00:00").toLocaleDateString("fr-FR"):"–")+'</td><td>'+libelle(v.t)+'</td>'+
-      '<td class="num">'+fmt(v.q,v.q%1?2:0)+'</td><td class="num">'+fmt(v.pa)+'</td><td class="num">'+fmt(v.pv)+'</td>'+
-      '<td class="num '+(v.res>=0?"pos":"neg")+'">'+(v.res>=0?"+":"")+fmt(v.res)+'</td><td class="num '+(v.res>=0?"pos":"neg")+'">'+pct(v.pv/v.pa-1)+'</td>'+
+      '<td class="num">'+fmt(v.q,v.q%1?2:0)+'</td><td class="num">'+m(v.pa,v.t)+'</td><td class="num">'+m(v.pv,v.t)+'</td>'+
+      '<td class="num '+(v.res>=0?"pos":"neg")+'">'+(v.res>=0?"+":"")+m(v.res,v.t)+'</td><td class="num '+(v.res>=0?"pos":"neg")+'">'+pct(v.pv/v.pa-1)+'</td>'+
       '<td><button class="linkbtn" data-delv="'+i+'">Annuler la vente</button></td></tr>';
   }).join("");
-  el.innerHTML='<table><thead><tr><th>Date</th><th>Action</th><th class="num">Qté</th><th class="num">Prix d’achat moyen ($)</th><th class="num">Prix de vente ($)</th><th class="num">Résultat ($)</th><th class="num">%</th><th></th></tr></thead><tbody>'+rows+
-    '</tbody><tfoot><tr><td colspan="5"><strong>Total réalisé</strong> <span class="info">(hors frais)</span></td><td class="num '+(tot>=0?"pos":"neg")+'"><strong>'+(tot>=0?"+":"")+fmt(tot)+'</strong></td><td colspan="2"></td></tr></tfoot></table>';
+  el.innerHTML='<table><thead><tr><th>Date</th><th>Action</th><th class="num">Qté</th><th class="num">Prix d’achat moyen'+HCUR()+'</th><th class="num">Prix de vente'+HCUR()+'</th><th class="num">Résultat'+HCUR()+'</th><th class="num">%</th><th></th></tr></thead><tbody>'+rows+
+    '</tbody><tfoot><tr><td colspan="5"><strong>Total réalisé</strong> <span class="info">(hors frais'+(eu?", converti en € au cours du jour":"")+')</span></td><td class="num '+(tot>=0?"pos":"neg")+'"><strong>'+(tot>=0?"+":"")+fmt(tot)+(eu?" €":"")+'</strong></td><td colspan="2"></td></tr></tfoot></table>';
 }
 $("ventes").addEventListener("click",function(e){
   var d=e.target.closest("[data-delv]");if(!d)return;
@@ -582,18 +650,18 @@ function renderUnivers(){
   if(!S.data){$("univCount").textContent="";return}
   var total=Object.keys(S.data.series).length,ok=S.results.length,up=S.ranked.length;
   $("univCount").textContent=ok+" actions";
-  $("univInfo").textContent="Liste actuelle du S&P 500 (source : Wikipedia), cours Yahoo Finance au "+dateFR(S.data.dates[S.data.dates.length-1])+". "+
+  $("univInfo").textContent=(MODE.id==="eu"?"Votre sélection européenne ("+S.selEU.length+" cochées)":"Liste actuelle du S&P 500 (source : Wikipedia)")+", cours Yahoo Finance au "+dateFR(S.data.dates[S.data.dates.length-1])+". "+
     ok+" actions analysées"+(total>ok?" ("+(total-ok)+" écartées faute d’historique suffisant)":"")+", dont "+up+" avec la MM20 au-dessus de la MM200. "+
     "Les sociétés entrées en bourse depuis moins d’environ 10 mois n’ont pas encore assez d’historique et n’apparaissent pas.";
   if(!$("univDetails").open)return;   /* la liste n’est construite qu’à l’ouverture */
   var q=($("univSearch").value||"").trim().toLowerCase();
   var rows=S.results.slice().sort(function(a,b){return(a.n||a.t).localeCompare(b.n||b.t,"fr")})
     .filter(function(r){return!q||(r.n+" "+r.t+" "+r.s).toLowerCase().indexOf(q)>=0});
-  $("univList").innerHTML=rows.length?'<table><thead><tr><th>Action</th><th>Secteur</th><th class="num">Cours ($)</th><th class="num">Ratio</th><th>Tendance</th></tr></thead><tbody>'+
+  $("univList").innerHTML=rows.length?'<table><thead><tr><th>Action</th><th>Secteur</th><th class="num">Cours'+HCUR()+'</th><th class="num">Ratio</th><th>Tendance</th></tr></thead><tbody>'+
     rows.map(function(r){
       var rg=S.rang[r.t.toUpperCase()];
       return'<tr><td><button class="linkbtn" style="color:var(--ink);text-align:left" data-sel="'+esc(r.t)+'">'+libelle(r.t)+'</button></td><td class="small">'+esc(r.s||"–")+'</td>'+
-        '<td class="num">'+fmt(r.price)+'</td><td class="num">'+fmt(r.ratio,3)+'</td>'+
+        '<td class="num">'+fmt(r.price)+(MODE.id==="eu"?" "+CUR(r.t):"")+'</td><td class="num">'+fmt(r.ratio,3)+'</td>'+
         '<td class="small"><span class="dot" style="background:'+(r.up?"var(--buy)":"var(--sell)")+'"></span>'+(r.up?"Haussière"+(rg?" ("+rg+"e)":""):"Baissière")+'</td></tr>';
     }).join("")+'</tbody></table>':'<p class="small muted">Aucune action ne correspond.</p>';
 }
@@ -601,7 +669,7 @@ $("univDetails").addEventListener("toggle",renderUnivers);
 $("univSearch").addEventListener("input",renderUnivers);
 $("univList").addEventListener("click",function(e){var s=e.target.closest("[data-sel]");if(s)select(s.getAttribute("data-sel"))});
 function renderDatalist(){$("tickers").innerHTML=S.results.map(function(r){return'<option value="'+esc(r.t)+'">'+esc(r.n)+'</option>'}).join("")}
-function renderAll(){if(S.data)computePlan();renderStatus();renderOrders();renderBoard();renderDetail();renderPortfolio();renderVentes();renderDatalist();renderUnivers();renderBadge()}
+function renderAll(){if(S.data)computePlan();renderStatus();renderOrders();renderBoard();renderDetail();renderPortfolio();renderVentes();renderDatalist();renderUnivers();renderEU();renderBadge()}
 
 /* ---------- événements ---------- */
 $("btnUpdate").onclick=function(){update(false)};
@@ -646,7 +714,8 @@ function renderBadge(){
 
 /* ---------- sauvegarde ---------- */
 $("btnExport").onclick=function(){
-  var txt=JSON.stringify({v:1,portfolio:S.portfolio,ventes:S.ventes,settings:S.settings});
+  var pack=function(m){var c=MODES[m].cles;return{portfolio:LS.get(c.port,[]),ventes:LS.get(c.ventes,[]),settings:LS.get(c.settings,null)}};
+  var txt=JSON.stringify({v:2,us:pack("us"),eu:Object.assign(pack("eu"),{selection:S.selEU})});
   var done=function(){showBanner("Sauvegarde copiée. Collez-la dans une note ou un e-mail pour la garder.",true)};
   var fallback=function(){var ta=$("backupText");ta.value=txt;ta.focus();ta.select();showBanner("Copiez le texte sélectionné dans le cadre ci-dessous.",true)};
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,fallback)}else fallback();
@@ -654,14 +723,17 @@ $("btnExport").onclick=function(){
 $("btnImport").onclick=function(){
   try{
     var o=JSON.parse($("backupText").value.trim());
-    if(!o||!Array.isArray(o.portfolio))throw 0;
-    var ok=o.portfolio.every(function(p){return p&&typeof p.t==="string"&&p.price>0&&p.q>0});
-    if(!ok)throw 0;
-    if(S.portfolio.length&&!confirm("Remplacer votre portefeuille actuel ("+S.portfolio.length+" lignes) par la sauvegarde ?"))return;
-    S.portfolio=o.portfolio;LS.set("mm.portfolio",S.portfolio);
-    if(Array.isArray(o.ventes)){S.ventes=o.ventes;LS.set("mm.ventes",S.ventes)}
-    if(o.settings){S.settings=Object.assign({},DEFAULTS,o.settings);LS.set("mm.pur.settings",S.settings);["capital","lignes","fx","sortie"].forEach(function(k){$({capital:"sCapital",lignes:"sLignes",fx:"sFx",sortie:"sSortie"}[k]).value=S.settings[k]})}
-    $("backupText").value="";renderAll();showBanner("Sauvegarde restaurée : "+S.portfolio.length+" lignes.",true);
+    if(o&&o.v!==2&&Array.isArray(o.portfolio))o={v:2,us:{portfolio:o.portfolio,ventes:o.ventes||[],settings:o.settings||null}};   /* ancienne sauvegarde */
+    if(!o||o.v!==2)throw 0;
+    var valide=function(x){return!x||(Array.isArray(x.portfolio)&&x.portfolio.every(function(p){return p&&typeof p.t==="string"&&p.price>0&&p.q>0}))};
+    if(!valide(o.us)||!valide(o.eu))throw 0;
+    if(!confirm("Remplacer vos portefeuilles actuels par la sauvegarde ?"))return;
+    ["us","eu"].forEach(function(m){
+      var x=o[m];if(!x)return;var c=MODES[m].cles;
+      LS.set(c.port,x.portfolio);LS.set(c.ventes,x.ventes||[]);if(x.settings)LS.set(c.settings,x.settings);
+    });
+    if(o.eu&&Array.isArray(o.eu.selection)){S.selEU=o.eu.selection;LS.set("mm.eu.selection",S.selEU)}
+    $("backupText").value="";setMode(MODE.id,true);showBanner("Sauvegarde restaurée.",true);
   }catch(e){showBanner("Ce texte n’est pas une sauvegarde valide de l’appli.",false,true)}
 };
 function bindList(id,sel){
@@ -670,6 +742,7 @@ function bindList(id,sel){
 }
 bindList("board",".row");
 $("orders").addEventListener("click",function(e){
+  var go=e.target.closest("[data-goto]");if(go){showTab(go.getAttribute("data-goto"));if(MODE.id==="eu")setTimeout(function(){$("euSearch").scrollIntoView({behavior:"smooth",block:"center"})},50);return}
   var a=e.target.closest("[data-act]");if(a){prefill(a.getAttribute("data-act"),a.getAttribute("data-t"));return}
   var n=e.target.closest(".order");if(n)select(n.getAttribute("data-t"));
 });
@@ -682,7 +755,7 @@ $("orders").addEventListener("click",function(e){
 /* ---------- annulation ---------- */
 var toastTimer,undoFn=null;
 function snapshot(){return JSON.stringify({p:S.portfolio,v:S.ventes})}
-function restore(snap){var o=JSON.parse(snap);S.portfolio=o.p;S.ventes=o.v;LS.set("mm.portfolio",S.portfolio);LS.set("mm.ventes",S.ventes);renderAll()}
+function restore(snap){var o=JSON.parse(snap);S.portfolio=o.p;S.ventes=o.v;LS.set(K("port"),S.portfolio);LS.set(K("ventes"),S.ventes);renderAll()}
 function toast(msg,fn){
   clearTimeout(toastTimer);undoFn=fn||null;
   $("toastMsg").textContent=msg;$("toastUndo").hidden=!fn;$("toast").hidden=false;
@@ -697,7 +770,7 @@ function annulerVente(i){
     if(m)m.q+=l.q;else S.portfolio.push({t:l.t,price:l.price,q:l.q,d:l.d||null});
   });
   S.portfolio.sort(function(a,b){return (a.d||"9999")<(b.d||"9999")?-1:(a.d||"9999")>(b.d||"9999")?1:0});   /* garde l’ordre d’achat */
-  S.ventes.splice(i,1);LS.set("mm.portfolio",S.portfolio);LS.set("mm.ventes",S.ventes);renderAll();
+  S.ventes.splice(i,1);LS.set(K("port"),S.portfolio);LS.set(K("ventes"),S.ventes);renderAll();
 }
 
 /* ---------- formulaire pré-rempli ---------- */
@@ -705,7 +778,7 @@ function heldQty(t){return S.portfolio.filter(function(o){return o.t.toUpperCase
 function today(){var d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
 function setOp(op,pre){
   $("pOp").value=op;
-  $("pPriceLabel").textContent=op==="vente"?"Prix de vente ($)":"Prix d’achat ($)";
+  $("pPriceLabel").textContent=op==="vente"?"Prix de vente"+(MODE.id==="us"?" ($)":"")+"":"Prix d’achat"+(MODE.id==="us"?" ($)":"");
   $("pSubmit").textContent=op==="vente"?"Enregistrer la vente":"Enregistrer l’achat";
   $("posForm").className="form"+(op==="vente"?" vente":pre?" achat-pre":"");
 }
@@ -721,16 +794,17 @@ function prefill(op,t){
   $("pDate").value=today();
   $("pHint").hidden=false;
   $("pHint").textContent=op==="vente"
-    ?"Vente pré-remplie avec toute la ligne et la dernière clôture"+(r?" ("+fmt(r.price)+" $)":"")+". Remplacez le prix par celui réellement obtenu, puis enregistrez."
-    :"Achat pré-rempli avec la quantité proposée et la dernière clôture ("+(r?fmt(r.price)+" $":"–")+"). Remplacez le prix par celui réellement payé, puis enregistrez.";
+    ?"Vente pré-remplie avec toute la ligne et la dernière clôture"+(r?" ("+fmt(r.price)+" "+CUR(t)+")":"")+". Remplacez le prix par celui réellement obtenu, puis enregistrez."
+    :"Achat pré-rempli avec la quantité proposée et la dernière clôture ("+(r?fmt(r.price)+" "+CUR(t):"–")+"). Remplacez le prix par celui réellement payé, puis enregistrez.";
   $("posForm").scrollIntoView({behavior:"smooth",block:"start"});
   setTimeout(function(){$("pPrice").focus();$("pPrice").select()},300);
 }
 $("pOp").addEventListener("change",function(){setOp($("pOp").value,false)});
 $("posForm").addEventListener("submit",function(e){
   e.preventDefault();
-  var t=$("pTicker").value.trim().toUpperCase().replace(".","-"),pr=parseFloat($("pPrice").value),q=parseFloat($("pQty").value),d=$("pDate").value||today();
+  var t=$("pTicker").value.trim().toUpperCase(),pr=parseFloat($("pPrice").value),q=parseFloat($("pQty").value),d=$("pDate").value||today();
   if(!t||!(pr>0)||!(q>0))return;
+  if(!S.byTicker[t]&&S.byTicker[t.replace(".","-")])t=t.replace(".","-");   /* ex. BRK.B -> BRK-B */
   if($("pOp").value==="vente"){
     var dispo=heldQty(t);
     if(dispo<=0){showBanner("Vous ne détenez pas "+t+" dans le portefeuille.",false,true);return}
@@ -743,12 +817,12 @@ $("posForm").addEventListener("submit",function(e){
     });
     var res=q*pr-cout;
     S.portfolio=garde;S.ventes.push({t:t,q:q,pa:cout/q,pv:pr,d:d,res:res,lots:lots});
-    LS.set("mm.portfolio",S.portfolio);LS.set("mm.ventes",S.ventes);
-    toast("Vente enregistrée : "+libelleTxt(t)+", "+(res>=0?"+":"")+fmt(res)+" $",function(){restore(avant)});
+    LS.set(K("port"),S.portfolio);LS.set(K("ventes"),S.ventes);
+    toast("Vente enregistrée : "+libelleTxt(t)+", "+(res>=0?"+":"")+fmt(res)+" "+CUR(t),function(){restore(avant)});
   }else{
     var avantA=snapshot();
-    S.portfolio.push({t:t,price:pr,q:q,d:d});LS.set("mm.portfolio",S.portfolio);
-    toast("Achat enregistré : "+fmt(q,q%1?2:0)+" "+libelleTxt(t)+" à "+fmt(pr)+" $",function(){restore(avantA)});
+    S.portfolio.push({t:t,price:pr,q:q,d:d});LS.set(K("port"),S.portfolio);
+    toast("Achat enregistré : "+fmt(q,q%1?2:0)+" "+libelleTxt(t)+" à "+fmt(pr)+" "+CUR(t),function(){restore(avantA)});
   }
   $("posForm").reset();setOp("achat",false);$("pHint").hidden=true;renderAll();
 });
@@ -757,8 +831,8 @@ $("portfolio").addEventListener("click",function(e){
   var d=e.target.closest("[data-del]"),s=e.target.closest("[data-sel]");
   if(d){
     var i=+d.getAttribute("data-del"),o=S.portfolio[i];if(!o)return;
-    if(!confirm("Annuler l’achat de "+fmt(o.q,o.q%1?2:0)+" "+libelleTxt(o.t)+" à "+fmt(o.price)+" $ ? La ligne sera retirée du portefeuille."))return;
-    var avant=snapshot();S.portfolio.splice(i,1);LS.set("mm.portfolio",S.portfolio);renderAll();
+    if(!confirm("Annuler l’achat de "+fmt(o.q,o.q%1?2:0)+" "+libelleTxt(o.t)+" à "+fmt(o.price)+" "+CUR(o.t)+" ? La ligne sera retirée du portefeuille."))return;
+    var avant=snapshot();S.portfolio.splice(i,1);LS.set(K("port"),S.portfolio);renderAll();
     toast("Achat annulé : "+libelleTxt(o.t),function(){restore(avant)});
   }
   if(s)select(s.getAttribute("data-sel"));
@@ -770,15 +844,88 @@ $("portfolio").addEventListener("click",function(e){
     if(!(v>0)){inp.value=S.settings[p[1]];return}
     if(p[1]==="sortie"){v=Math.round(v);if(v<S.settings.lignes){v=S.settings.lignes;showBanner("Le seuil de sortie ne peut pas être inférieur au nombre de lignes ("+v+"), sinon des actions tout juste achetées seraient revendues.",false,true)}inp.value=v}
     if(p[1]==="lignes"){v=Math.round(v);inp.value=v;if(v<10)showBanner("Moins de 10 lignes : le backtest montre un risque bien plus élevé (pire chute de −48 % avec 5 lignes).",false,true)}
-    S.settings[p[1]]=v;LS.set("mm.pur.settings",S.settings);if(p[1]==="sortie")computeTopHistory();renderAll();
+    S.settings[p[1]]=v;LS.set(K("settings"),S.settings);if(p[1]==="sortie")computeTopHistory();renderAll();
   });
 });
 
 /* ---------- démarrage ---------- */
+/* ---------- marché : S&P 500 ou Europe ---------- */
+function syncInputs(){[["sCapital","capital"],["sLignes","lignes"],["sFx","fx"],["sSortie","sortie"]].forEach(function(p){$(p[0]).value=S.settings[p[1]]})}
+function setMode(id,force){
+  if(!MODES[id])id="us";
+  if(MODE.id===id&&!force)return;
+  MODE=MODES[id];DEFAULTS=MODE.defauts;LS.set("mm.mode",id);
+  document.body.dataset.mode=id;
+  ["us","eu"].forEach(function(m){$("mode-"+m).setAttribute("aria-pressed",m===id)});
+  document.querySelectorAll(".univName").forEach(function(e){e.textContent=id==="eu"?"de votre sélection européenne":"du S&P 500"});
+  S.settings=Object.assign({},MODE.defauts,LS.get(K("settings"),{}));
+  S.portfolio=LS.get(K("port"),[]);S.ventes=LS.get(K("ventes"),[]);
+  S.data=null;S.full=null;S.results=[];S.byTicker={};S.ranked=[];S.rang={};S.plan=null;S.selected=null;
+  S.checkedAt=LS.get(K("checked"),null);
+  syncInputs();setOp($("pOp").value||"achat",false);$("pHint").hidden=true;
+  if(!$("sheet").hidden)closeSheet();
+  showBanner("");
+  var saved=LS.get(K("data"),null);
+  if(saved){try{ingest(saved)}catch(e){LS.del(K("data"));renderAll()}}else{renderAll()}
+  renderEU();
+  update(true);
+}
+["us","eu"].forEach(function(m){$("mode-"+m).addEventListener("click",function(){setMode(m)})});
+
+function renderEU(){
+  var c=$("euCount");
+  if(MODE.id!=="eu")return;
+  var base=S.full&&S.full.base;
+  c.textContent=S.selEU.length+" sélectionnée"+(S.selEU.length>1?"s":"");
+  if(!base){$("euList").innerHTML='<p class="small muted">La base s’affichera après la première mise à jour des données européennes.</p>';return}
+  var q=($("euSearch").value||"").trim().toLowerCase(),sel={};S.selEU.forEach(function(t){sel[t]=1});
+  var groupes={},ordre=[];
+  base.forEach(function(b){
+    if(q&&(b.n+" "+b.t+" "+b.pays+" "+(b.secteur||"")).toLowerCase().indexOf(q)<0)return;
+    var g=b.pays||"Autre";
+    if(!groupes[g]){groupes[g]=[];ordre.push(g)}
+    groupes[g].push(b);
+  });
+  if(!ordre.length){$("euList").innerHTML='<p class="small muted">Aucune action ne correspond.</p>';return}
+  ordre.sort(function(a,b){return groupes[b].length-groupes[a].length||a.localeCompare(b,"fr")});
+  ordre.forEach(function(g){groupes[g].sort(function(a,b){return a.n.localeCompare(b.n,"fr")})});
+  $("euList").innerHTML=ordre.map(function(g){
+    var lst=groupes[g],dispo=lst.filter(function(b){return b.ok!==false}),nb=dispo.filter(function(b){return sel[b.t]}).length,tout=nb===dispo.length&&dispo.length>0;
+    var horsPEA=g==="Royaume-Uni"||g==="Suisse";
+    return'<div class="grp"><div class="grp-head"><h3>'+esc(g)+' <span class="muted small">'+nb+' / '+dispo.length+(lst[0]&&lst[0].cur&&lst[0].cur!=="EUR"?" · "+esc(lst[0].cur):"")+(horsPEA?" · hors PEA":"")+'</span></h3>'+
+      '<button class="linkbtn" style="color:var(--ink)" data-grp="'+esc(g)+'" data-all="'+(tout?0:1)+'">'+(tout?"Tout retirer":"Tout ajouter")+'</button></div><div class="items">'+
+      lst.map(function(b){
+        var on=!!sel[b.t],off=b.ok===false;
+        return'<label class="item'+(on?" on":"")+(off?" off":"")+'"><input type="checkbox" data-t="'+esc(b.t)+'"'+(on?" checked":"")+(off?" disabled":"")+'>'+
+          '<span><strong>'+esc(b.n)+'</strong> <small>– '+esc(b.t)+(b.secteur?" · "+esc(b.secteur):"")+(off?" · pas de cours":"")+'</small></span></label>';
+      }).join("")+'</div></div>';
+  }).join("");
+}
+function setSelection(list){
+  S.selEU=list;LS.set("mm.eu.selection",S.selEU);
+  if(S.full){try{ingest(S.full)}catch(e){renderAll()}}
+  renderEU();
+}
+$("euList").addEventListener("change",function(e){
+  var cb=e.target.closest("input[type=checkbox]");if(!cb)return;
+  var t=cb.getAttribute("data-t"),l=S.selEU.filter(function(x){return x!==t});
+  if(cb.checked)l.push(t);
+  setSelection(l);
+});
+$("euList").addEventListener("click",function(e){
+  var g=e.target.closest("[data-grp]");if(!g||!S.full)return;
+  var nom=g.getAttribute("data-grp"),ajout=g.getAttribute("data-all")==="1";
+  var ts=S.full.base.filter(function(b){return(b.pays||"Autre")===nom&&b.ok!==false}).map(function(b){return b.t});
+  var l=S.selEU.filter(function(x){return ts.indexOf(x)<0});
+  if(ajout)l=l.concat(ts);
+  setSelection(l);
+});
+$("euSearch").addEventListener("input",renderEU);
+$("euAll").onclick=function(){if(!S.full||!S.full.base)return;setSelection(S.full.base.filter(function(b){return b.ok!==false}).map(function(b){return b.t}))};
+$("euNone").onclick=function(){if(S.selEU.length&&confirm("Retirer les "+S.selEU.length+" actions sélectionnées ?"))setSelection([])};
+
 showTab(location.hash.slice(1)||LS.get("mm.tab","ordres"));
-var saved=LS.get("mm.data",null);S.checkedAt=LS.get("mm.checked",null);
-if(saved){try{ingest(saved)}catch(e){LS.del("mm.data");renderAll()}}else{renderAll()}
-update(true);
+setMode(MODE.id,true);
 if("serviceWorker" in navigator&&location.protocol!=="file:"){navigator.serviceWorker.register("sw.js").catch(function(){})}
 })();
 </script>
