@@ -1,0 +1,27 @@
+name: Backtest du process
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install yfinance pandas numpy lxml requests matplotlib
+      - run: python backtest/backtest_process.py
+      - name: Enregistrer le rapport
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add backtest/rapport_process.html backtest/resultats_process.json
+          git diff --staged --quiet || git commit -m "Backtest du process du $(date -u +%Y-%m-%d)"
+          git pull --rebase
+          git push
