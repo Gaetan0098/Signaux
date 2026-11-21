@@ -196,6 +196,9 @@ header.top{display:block}
 .eu-only{display:none}
 body[data-mode="eu"] .eu-only{display:block}
 body[data-mode="eu"] .us-only{display:none}
+.eufiltres{display:grid;grid-template-columns:2fr 1.4fr 1fr;gap:10px;margin-top:10px}
+@media (max-width:600px){.eufiltres{grid-template-columns:1fr 1fr}.eufiltres label:first-child{grid-column:1/-1}}
+.eusel .item .cap{margin-left:auto;font-size:.78rem;color:var(--muted);white-space:nowrap;font-weight:600}
 /* fiche détail (mobile) */
 .sheet{position:fixed;inset:0;z-index:30;background:rgba(10,18,30,.45);display:flex;align-items:flex-end}
 .sheet[hidden]{display:none}
@@ -288,8 +291,18 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
         <div class="panel eu-only eusel" style="margin-top:16px">
           <div class="panel-head"><h2>Mes actions européennes</h2><span class="muted small" id="euCount"></span></div>
           <p class="small muted">Base : les 600 sociétés du STOXX Europe 600, mise à jour chaque soir. Cochez celles à suivre : elles forment votre classement et vos ordres en mode Europe. Les cours sont dans la devise de chaque bourse ; les montants à investir sont convertis depuis l’euro.</p>
-          <div class="row2" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"><button id="euAll">Tout le STOXX 600</button><button id="euNone">Tout désélectionner</button></div>
-          <label class="univ-search">Rechercher<input id="euSearch" type="search" placeholder="Nom, symbole, pays ou secteur"></label>
+          <div class="eufiltres">
+            <label>Rechercher<input id="euSearch" type="search" placeholder="Nom, symbole, pays ou secteur"></label>
+            <label>Capitalisation<select id="euCap">
+              <option value="">Toutes</option>
+              <option value="50">Plus de 50 Md€</option>
+              <option value="10-50">10 à 50 Md€</option>
+              <option value="2-10">2 à 10 Md€</option>
+              <option value="0-2">Moins de 2 Md€</option>
+            </select></label>
+            <label>Trier par<select id="euTri"><option value="cap">Capitalisation</option><option value="nom">Nom</option></select></label>
+          </div>
+          <div class="row2" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button id="euAll">Tout ajouter</button><button id="euNone">Tout désélectionner</button></div>
           <div id="euList"><p class="small muted">La base s’affichera après la première mise à jour.</p></div>
         </div>
         <div class="panel" style="margin-top:16px">
@@ -596,7 +609,7 @@ function renderDetail(){
   else why.push("Sa MM20 est sous sa MM200 : la règle ne l’achète pas.");
   if(r.crossType)why.push("Dernier croisement "+r.crossType+" le "+new Date(r.crossDate+"T12:00:00").toLocaleDateString("fr-FR")+".");
   el.innerHTML='<div class="panel-head"><div><h2>'+esc(r.n&&r.n!==r.t?r.n:r.t)+' <span class="muted small">'+(r.n&&r.n!==r.t?"– "+esc(r.t):"")+(r.s?" · "+esc(r.s):"")+'</span></h2>'+
-    '<div class="big">'+fmt(r.price)+' '+CUR(r.t)+'</div><div class="small muted">'+(rank>=0?"Rang "+(rank+1)+" sur "+S.ranked.length+" actions en tendance":"Hors tendance")+'</div></div>'+
+    '<div class="big">'+fmt(r.price)+' '+CUR(r.t)+'</div><div class="small muted">'+(rank>=0?"Rang "+(rank+1)+" sur "+S.ranked.length+" actions en tendance":"Hors tendance")+(MODE.id==="eu"&&capDe(r.t)?" · capitalisation "+capTxt(capDe(r.t)):"")+'</div></div>'+
     '<span class="pill '+st.k+'">'+st.l+'</span></div>'+
     '<div class="kv"><div><span>MM20</span><b>'+fmt(r.ma20)+'</b></div><div><span>MM200</span><b>'+fmt(r.ma200)+'</b></div><div><span>Ratio</span><b>'+fmt(r.ratio,3)+'</b></div></div>'+
     '<div class="chart">'+chartSVG(r)+'</div>'+
@@ -872,24 +885,35 @@ function setMode(id,force){
 }
 ["us","eu"].forEach(function(m){$("mode-"+m).addEventListener("click",function(){setMode(m)})});
 
+function capTxt(c){if(!c)return"";return c>=1e9?fmt(c/1e9,c>=1e11?0:1)+" Md€":fmt(c/1e6,0)+" M€"}
+function capDe(t){var f=S.full;if(!f||!f.base)return null;if(!S.capMap||S.capMap.src!==f){S.capMap={src:f,m:{}};f.base.forEach(function(b){S.capMap.m[b.t]=b.cap||null})}return S.capMap.m[String(t).toUpperCase()]||null}
+function euVisibles(){
+  var base=S.full&&S.full.base;if(!base)return[];
+  var q=($("euSearch").value||"").trim().toLowerCase(),f=$("euCap").value,mn=0,mx=Infinity;
+  if(f){var p=f.split("-");mn=+p[0]*1e9;mx=p[1]?+p[1]*1e9:Infinity}
+  return base.filter(function(b){
+    if(q&&(b.n+" "+b.t+" "+b.pays+" "+(b.secteur||"")).toLowerCase().indexOf(q)<0)return false;
+    if(f&&!(b.cap>=mn&&b.cap<mx))return false;
+    return true;
+  });
+}
 function renderEU(){
   var c=$("euCount");
   if(MODE.id!=="eu")return;
   var base=S.full&&S.full.base;
   c.textContent=S.selEU.length+" sélectionnée"+(S.selEU.length>1?"s":"");
   if(!base){$("euList").innerHTML='<p class="small muted">La base s’affichera après la première mise à jour des données européennes.</p>';return}
-  var q=($("euSearch").value||"").trim().toLowerCase(),sel={};S.selEU.forEach(function(t){sel[t]=1});
-  var groupes={},ordre=[];
-  base.forEach(function(b){
-    if(q&&(b.n+" "+b.t+" "+b.pays+" "+(b.secteur||"")).toLowerCase().indexOf(q)<0)return;
-    var g=b.pays||"Autre";
-    if(!groupes[g]){groupes[g]=[];ordre.push(g)}
-    groupes[g].push(b);
-  });
-  if(!ordre.length){$("euList").innerHTML='<p class="small muted">Aucune action ne correspond.</p>';return}
+  var vis=euVisibles(),dispoVis=vis.filter(function(b){return b.ok!==false}),sel={};S.selEU.forEach(function(t){sel[t]=1});
+  var filtre=!!($("euSearch").value.trim()||$("euCap").value);
+  $("euAll").textContent=filtre?"Ajouter les "+dispoVis.length+" affichées":"Tout le STOXX 600";
+  $("euAll").disabled=!dispoVis.length;
+  var sansCap=base.filter(function(b){return!b.cap}).length;
+  if(!vis.length){$("euList").innerHTML='<p class="small muted">Aucune action ne correspond.</p>';return}
+  var groupes={},ordre=[],tri=$("euTri").value;
+  vis.forEach(function(b){var g=b.pays||"Autre";if(!groupes[g]){groupes[g]=[];ordre.push(g)}groupes[g].push(b)});
   ordre.sort(function(a,b){return groupes[b].length-groupes[a].length||a.localeCompare(b,"fr")});
-  ordre.forEach(function(g){groupes[g].sort(function(a,b){return a.n.localeCompare(b.n,"fr")})});
-  $("euList").innerHTML=ordre.map(function(g){
+  ordre.forEach(function(g){groupes[g].sort(tri==="cap"?function(a,b){return(b.cap||0)-(a.cap||0)||a.n.localeCompare(b.n,"fr")}:function(a,b){return a.n.localeCompare(b.n,"fr")})});
+  $("euList").innerHTML=(filtre&&$("euCap").value&&sansCap?'<p class="small muted">'+sansCap+' action'+(sansCap>1?"s":"")+' sans capitalisation connue '+(sansCap>1?"sont masquées":"est masquée")+' par ce filtre.</p>':"")+ordre.map(function(g){
     var lst=groupes[g],dispo=lst.filter(function(b){return b.ok!==false}),nb=dispo.filter(function(b){return sel[b.t]}).length,tout=nb===dispo.length&&dispo.length>0;
     var horsPEA=g==="Royaume-Uni"||g==="Suisse";
     return'<div class="grp"><div class="grp-head"><h3>'+esc(g)+' <span class="muted small">'+nb+' / '+dispo.length+(lst[0]&&lst[0].cur&&lst[0].cur!=="EUR"?" · "+esc(lst[0].cur):"")+(horsPEA?" · hors PEA":"")+'</span></h3>'+
@@ -897,7 +921,8 @@ function renderEU(){
       lst.map(function(b){
         var on=!!sel[b.t],off=b.ok===false;
         return'<label class="item'+(on?" on":"")+(off?" off":"")+'"><input type="checkbox" data-t="'+esc(b.t)+'"'+(on?" checked":"")+(off?" disabled":"")+'>'+
-          '<span><strong>'+esc(b.n)+'</strong> <small>– '+esc(b.t)+(b.secteur?" · "+esc(b.secteur):"")+(off?" · pas de cours":"")+'</small></span></label>';
+          '<span><strong>'+esc(b.n)+'</strong> <small>– '+esc(b.t)+(b.secteur?" · "+esc(b.secteur):"")+(off?" · pas de cours":"")+'</small></span>'+
+          (b.cap?'<span class="cap">'+capTxt(b.cap)+'</span>':'')+'</label>';
       }).join("")+'</div></div>';
   }).join("");
 }
@@ -915,13 +940,16 @@ $("euList").addEventListener("change",function(e){
 $("euList").addEventListener("click",function(e){
   var g=e.target.closest("[data-grp]");if(!g||!S.full)return;
   var nom=g.getAttribute("data-grp"),ajout=g.getAttribute("data-all")==="1";
-  var ts=S.full.base.filter(function(b){return(b.pays||"Autre")===nom&&b.ok!==false}).map(function(b){return b.t});
+  var ts=euVisibles().filter(function(b){return(b.pays||"Autre")===nom&&b.ok!==false}).map(function(b){return b.t});
   var l=S.selEU.filter(function(x){return ts.indexOf(x)<0});
   if(ajout)l=l.concat(ts);
   setSelection(l);
 });
 $("euSearch").addEventListener("input",renderEU);
-$("euAll").onclick=function(){if(!S.full||!S.full.base)return;setSelection(S.full.base.filter(function(b){return b.ok!==false}).map(function(b){return b.t}))};
+$("euAll").onclick=function(){if(!S.full||!S.full.base)return;
+  var aj=euVisibles().filter(function(b){return b.ok!==false}).map(function(b){return b.t}),deja={};S.selEU.forEach(function(t){deja[t]=1});
+  setSelection(S.selEU.concat(aj.filter(function(t){return!deja[t]})))};
+$("euCap").addEventListener("change",renderEU);$("euTri").addEventListener("change",renderEU);
 $("euNone").onclick=function(){if(S.selEU.length&&confirm("Retirer les "+S.selEU.length+" actions sélectionnées ?"))setSelection([])};
 
 showTab(location.hash.slice(1)||LS.get("mm.tab","ordres"));

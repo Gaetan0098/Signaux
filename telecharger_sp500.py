@@ -123,6 +123,27 @@ def stoxx600():
     return base
 
 
+def nombre_actions(tickers, anciennes):
+    """Nombre d'actions en circulation de chaque société (Yahoo Finance), en parallèle.
+    Si Yahoo ne répond pas pour une société, on garde la valeur de la veille."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    def lire(t):
+        try:
+            v = yf.Ticker(t).fast_info["shares"]
+            return t, float(v) if v and v > 0 else None
+        except Exception:
+            return t, None
+
+    resultat = dict(anciennes)
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        for t, v in pool.map(lire, tickers):
+            if v:
+                resultat[t] = v
+    print(f"  capitalisation connue pour {sum(1 for t in tickers if resultat.get(t))}/{len(tickers)} actions")
+    return resultat
+
+
 def europe():
     """Télécharge les ~600 actions du STOXX Europe 600 (liste lue chaque soir sur Wikipedia).
     Chacun choisit ensuite dans l'appli celles qu'il veut suivre."""
@@ -150,6 +171,15 @@ def europe():
     except Exception as e:
         print(f"  taux de change indisponibles : {e}")
 
+    # capitalisation = nombre d'actions × dernier cours, convertie en euros
+    anciennes = {}
+    try:
+        with open(SORTIE_EUROPE, encoding="utf-8") as f:
+            anciennes = {b["t"]: b.get("shares") for b in json.load(f).get("base", []) if b.get("shares")}
+    except Exception:
+        pass
+    actions = nombre_actions([t for t in tickers if t in cours.columns], anciennes)
+
     def arrondi(v):
         return round(v, 2) if v >= 100 else round(v, 3) if v >= 1 else round(v, 4)
 
@@ -164,6 +194,10 @@ def europe():
         b["ok"] = ok and sum(v is not None for v in valeurs) >= 220 and b["cur"] in fx
         if b["ok"]:
             series[t] = {"n": b["n"], "s": b["secteur"] + " · " + b["pays"], "cur": b["cur"], "c": valeurs}
+            dernier = next((v for v in reversed(valeurs) if v is not None), None)
+            if actions.get(t) and dernier:
+                b["shares"] = actions[t]
+                b["cap"] = round(actions[t] * dernier / fx[b["cur"]])
 
     donnees = {
         "source": "STOXX Europe 600 (Wikipedia) + Yahoo Finance",
