@@ -67,7 +67,7 @@ header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-con
 .panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px;flex-wrap:wrap}
 
 .board{list-style:none;margin:0;padding:0}
-.row{display:grid;grid-template-columns:2rem minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 8px;border-top:1px solid var(--line);cursor:pointer;border-radius:8px}
+.row{display:grid;grid-template-columns:2.6rem minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 8px;border-top:1px solid var(--line);cursor:pointer;border-radius:8px}
 .row:first-child{border-top:0}
 .row:hover{background:var(--bg)}
 .row[aria-selected="true"]{background:var(--bg);box-shadow:inset 3px 0 0 var(--ink)}
@@ -199,6 +199,12 @@ body[data-mode="eu"] .us-only{display:none}
 .eufiltres{display:grid;grid-template-columns:2fr 1.4fr 1fr;gap:10px;margin-top:10px}
 @media (max-width:600px){.eufiltres{grid-template-columns:1fr 1fr}.eufiltres label:first-child{grid-column:1/-1}}
 .eusel .item .cap{margin-left:auto;font-size:.78rem;color:var(--muted);white-space:nowrap;font-weight:600}
+.topsize{flex-direction:row;align-items:center;gap:8px;font-weight:700;color:var(--ink);font-size:.95rem;margin-left:auto}
+.topsize input{width:5.2rem;text-align:center;font-weight:700;padding:6px 8px}
+#tab-classement .panel-head{flex-wrap:nowrap}
+.rank{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1}
+.delta{font-size:.72rem;font-weight:800;white-space:nowrap;margin-top:2px}
+.delta.up{color:var(--buy)}.delta.down{color:var(--sell)}.delta.new{color:var(--buy)}
 /* fiche détail (mobile) */
 .sheet{position:fixed;inset:0;z-index:30;background:rgba(10,18,30,.45);display:flex;align-items:flex-end}
 .sheet[hidden]{display:none}
@@ -250,8 +256,9 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
         <div class="panel">
           <div class="panel-head">
             <h2>Classement MM20/MM200</h2>
-            <span class="muted small" id="boardInfo">Les 50 meilleurs ratios parmi les actions dont la MM20 est au-dessus de la MM200</span>
+            <label class="topsize">Top<input type="number" id="topSize" min="1" step="1" inputmode="numeric" aria-label="Taille du classement"></label>
           </div>
+          <p class="muted small" id="boardInfo" style="margin:-4px 0 10px"></p>
           <ol class="board" id="board" role="listbox" aria-label="Classement par ratio MM20/MM200"></ol>
         </div>
       </section>
@@ -285,7 +292,7 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
             <label>Capital du portefeuille (€)<input type="number" id="sCapital" step="100" min="0"></label>
             <label>Nombre de lignes<input type="number" id="sLignes" step="1" min="1"></label>
             <label class="us-only">Taux EUR/USD (1 € = … $)<input type="number" id="sFx" step="0.01" min="0.5"></label>
-            <label>Vendre si l’action sort du top…<input type="number" id="sSortie" step="1" min="1"></label>
+            <label>Taille du classement (vente si l’action en sort)<input type="number" id="sSortie" step="1" min="1"></label>
           </div>
         </div>
         <div class="panel eu-only eusel" style="margin-top:16px">
@@ -454,7 +461,9 @@ function computeTopHistory(){
       if(a>b)seaux[g2].push([a/b,r]);
     }
   });
-  seaux.forEach(function(lst,g){lst.sort(function(x,y){return y[0]-x[0]});for(var k=0;k<lst.length&&k<N;k++)lst[k][1].top[g]=1});
+  S.results.forEach(function(r){r.rangVeille=null});
+  seaux.forEach(function(lst,g){lst.sort(function(x,y){return y[0]-x[0]});for(var k=0;k<lst.length&&k<N;k++)lst[k][1].top[g]=1;
+    if(g===G-2)lst.forEach(function(x,k){x[1].rangVeille=k+1})});
   S.premierRang=premier;
   S.results.forEach(function(r){
     var k=G-1,info={};
@@ -562,17 +571,25 @@ function renderOrders(){
   }
   el.innerHTML=h;
 }
+function deltaHTML(r,rang){
+  if(r.rangVeille==null)return'<span class="delta new" title="Nouvelle dans le classement (MM20 passée au-dessus de la MM200)" aria-label="nouvelle">▲ new</span>';
+  var d=r.rangVeille-rang;
+  if(d>0)return'<span class="delta up" aria-label="gagne '+d+' places">▲'+d+'</span>';
+  if(d<0)return'<span class="delta down" aria-label="perd '+(-d)+' places">▼'+(-d)+'</span>';
+  return'';
+}
 function renderBoard(){
   var b=$("board");
   if(MODE.id==="eu"&&!S.selEU.length){b.innerHTML='<li class="empty">Aucune action européenne sélectionnée : cochez-les dans Réglages.</li>';$("boardInfo").textContent="";return}
   if(!S.ranked.length){b.innerHTML='<li class="empty">Aucune action avec la MM20 au-dessus de la MM200.</li>';return}
-  var top=S.ranked.slice(0,50),maxR=top[0].ratio-1;
-  $("boardInfo").textContent="Les "+top.length+" meilleurs ratios parmi les "+S.ranked.length+" actions dont la MM20 est au-dessus de la MM200";
+  var top=S.ranked.slice(0,S.settings.sortie),maxR=top[0].ratio-1;
+  var veille=S.data.dates.length>1?new Date(S.data.dates[S.data.dates.length-2]+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long"}):"";
+  $("boardInfo").textContent="Les "+top.length+" meilleurs ratios parmi les "+S.ranked.length+" actions dont la MM20 est au-dessus de la MM200. Une action détenue est vendue si elle sort de ce top "+S.settings.sortie+"."+(veille?" Flèches : évolution depuis la clôture du "+veille+".":"");
   b.innerHTML=top.map(function(r,i){
     var st=statusOf(r.t),w=Math.max(4,Math.min(100,(r.ratio-1)/maxR*100));
     var tag=st.k==="buy"?'<span class="tag buy">À acheter</span>':st.k==="sell"||st.l==="Conserver"?'<span class="tag held">Détenue</span>':'<span class="tag">En attente</span>';
     return '<li class="row" role="option" tabindex="0" data-t="'+esc(r.t)+'" aria-selected="'+(r.t.toUpperCase()===S.selected)+'">'+
-      '<span class="rank">'+(i+1)+'</span><div><div>'+libelle(r.t)+'</div>'+
+      '<span class="rank">'+(i+1)+deltaHTML(r,i+1)+'</span><div><div>'+libelle(r.t)+'</div>'+
       '<div class="meter" aria-hidden="true"><span style="width:'+w+'%"></span></div>'+
       '<div class="ratio">MM20/MM200 '+fmt(r.ratio,3)+' · cours '+fmt(r.price)+' '+CUR(r.t)+(r.mom!=null?' · <span class="info">momentum '+pct(r.mom)+'</span>':'')+'</div></div>'+tag+'</li>';
   }).join("");
@@ -857,13 +874,21 @@ $("portfolio").addEventListener("click",function(e){
     if(!(v>0)){inp.value=S.settings[p[1]];return}
     if(p[1]==="sortie"){v=Math.round(v);if(v<S.settings.lignes){v=S.settings.lignes;showBanner("Le seuil de sortie ne peut pas être inférieur au nombre de lignes ("+v+"), sinon des actions tout juste achetées seraient revendues.",false,true)}inp.value=v}
     if(p[1]==="lignes"){v=Math.round(v);inp.value=v;if(v<10)showBanner("Moins de 10 lignes : le backtest montre un risque bien plus élevé (pire chute de −48 % avec 5 lignes).",false,true)}
-    S.settings[p[1]]=v;LS.set(K("settings"),S.settings);if(p[1]==="sortie")computeTopHistory();renderAll();
+    S.settings[p[1]]=v;LS.set(K("settings"),S.settings);if(p[1]==="sortie"){$("topSize").value=v;computeTopHistory()}renderAll();
   });
 });
 
 /* ---------- démarrage ---------- */
 /* ---------- marché : S&P 500 ou Europe ---------- */
-function syncInputs(){[["sCapital","capital"],["sLignes","lignes"],["sFx","fx"],["sSortie","sortie"]].forEach(function(p){$(p[0]).value=S.settings[p[1]]})}
+function syncInputs(){[["sCapital","capital"],["sLignes","lignes"],["sFx","fx"],["sSortie","sortie"],["topSize","sortie"]].forEach(function(p){$(p[0]).value=S.settings[p[1]]})}
+$("topSize").addEventListener("change",function(){
+  var v=Math.round(parseFloat($("topSize").value));
+  if(!(v>0)){$("topSize").value=S.settings.sortie;return}
+  if(v<S.settings.lignes){v=S.settings.lignes;showBanner("Le classement ne peut pas être plus court que le nombre de lignes ("+v+"), sinon des actions tout juste achetées seraient revendues.",false,true)}
+  S.settings.sortie=v;$("topSize").value=v;$("sSortie").value=v;LS.set(K("settings"),S.settings);
+  computeTopHistory();renderAll();
+});
+$("topSize").addEventListener("keydown",function(e){if(e.key==="Enter")$("topSize").blur()});
 function setMode(id,force){
   if(!MODES[id])id="us";
   if(MODE.id===id&&!force)return;
