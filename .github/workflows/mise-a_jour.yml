@@ -20,10 +20,11 @@ jobs:
       - run: pip install yfinance pandas lxml requests
       - run: python telecharger_sp500.py
       - name: Enregistrer les nouvelles données
+        if: always()   # enregistre ce qui a réussi, même si une partie (S&P 500 ou Europe) a échoué
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
-          git add data/donnees_bourse.json
+          git add data/donnees_*.json
           git diff --staged --quiet || git commit -m "Cours du $(date -u +%Y-%m-%d)"
           git pull --rebase
           git push
