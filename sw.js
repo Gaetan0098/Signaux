@@ -1,6 +1,6 @@
 // Service worker : l’application s’ouvre même hors connexion.
 // Les données (data/) ne sont jamais servies depuis ce cache : l’app les garde elle-même.
-const CACHE = "signaux-v1";
+const CACHE = "road-to-million-v1";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-180.png"];
 
 self.addEventListener("install", (e) => {

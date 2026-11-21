@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Signaux MM20/MM200</title>
+<title>Road to Million</title>
 <meta name="theme-color" content="#13233A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Signaux">
+<meta name="apple-mobile-web-app-title" content="Road to Million">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -189,7 +189,7 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
 <div class="wrap">
   <header class="top">
     <div>
-      <h1>Signaux MM20/MM200</h1>
+      <h1>Road to Million</h1>
       <p class="status muted" id="status">Aucune donnée chargée.</p>
     </div>
     <div class="actions">
@@ -280,10 +280,10 @@ textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid v
         <div class="panel" style="margin-top:16px">
           <div class="panel-head"><h2>La règle</h2></div>
           <div class="rules" style="margin-top:0">
-            <p><strong>La règle :</strong> parmi les actions du S&amp;P 500 dont la MM20 est au-dessus de la MM200, on achète celles qui ont le ratio MM20/MM200 le plus élevé, à parts égales, tant qu’il reste des places. On garde chaque action tant qu’elle reste dans les 50 meilleurs ratios (réglable) ; on la vend dès que l’une de ces conditions est remplie : elle sort de ce top 50, son cours passe sous sa MM200, sa MM20 repasse sous sa MM200, ou elle quitte l’indice. On n’achète jamais une action dont le cours est déjà sous sa MM200. Pas de stop.</p>
+            <p><strong>La règle :</strong> parmi les actions du S&amp;P 500 dont la MM20 est au-dessus de la MM200, on achète celles qui ont le ratio MM20/MM200 le plus élevé, à parts égales, tant qu’il reste des places. On garde chaque action tant qu’elle reste dans les 50 meilleurs ratios (réglable) ; on la vend dès que l’une de ces conditions est remplie : elle sort de ce top 50, sa MM20 repasse sous sa MM200, ou elle quitte l’indice. Pas de stop.</p>
             <p><strong>Quand agir :</strong> les signaux sont calculés sur les cours de clôture ; les ordres se passent à l’ouverture de la séance suivante, comme dans le backtest.</p>
             <p><strong>Momentum 12 mois :</strong> affiché pour information (hausse sur 12 mois, hors dernier mois). Il n’entre pas dans les signaux : son utilité n’a pas été démontrée par le test.</p>
-            <p class="note"><strong>Attention : les ventes à la sortie du top 50 et au passage du cours sous la MM200 n’ont pas été testées.</strong> Les chiffres qui suivent concernent la règle d’origine (vente uniquement au croisement baissier). Ce que le backtest a montré : en 2021-2024, +23,6 %/an contre +13,9 % pour l’indice, avec une pire chute de −28 %. En validation 2025-2026, +18,3 %/an contre +10,3 %, mais une chute de −47 % à un moment donné. Le rendement supplémentaire se paie par un risque nettement plus élevé. En dessous de 10 lignes, le risque augmente fortement.</p>
+            <p class="note"><strong>Attention : la vente à la sortie du top 50 n’a pas été testée.</strong> Les chiffres qui suivent concernent la règle d’origine (vente uniquement au croisement baissier). Ce que le backtest a montré : en 2021-2024, +23,6 %/an contre +13,9 % pour l’indice, avec une pire chute de −28 %. En validation 2025-2026, +18,3 %/an contre +10,3 %, mais une chute de −47 % à un moment donné. Le rendement supplémentaire se paie par un risque nettement plus élevé. En dessous de 10 lignes, le risque augmente fortement.</p>
           </div>
         </div>
         <footer>
@@ -346,7 +346,6 @@ function sellReason(t){
   var r=S.byTicker[t];
   if(!r)return"N’est plus dans le S&P 500 : la règle vend.";
   if(!r.up)return"Croisement baissier : la MM20 ("+fmt(r.ma20)+") est passée sous la MM200 ("+fmt(r.ma200)+").";
-  if(r.price<r.ma200)return"Cours sous la MM200 : "+fmt(r.price)+" $ contre "+fmt(r.ma200)+" $.";
   var rg=S.rang[t];
   if(rg>S.settings.sortie)return"Sortie du top "+S.settings.sortie+" : classée "+rg+"e sur les ratios MM20/MM200.";
   return null;
@@ -356,7 +355,7 @@ function computePlan(){
   held.forEach(function(t){var why=sellReason(t);(why?sells:keeps).push({t:t,why:why})});
   var libres=Math.max(0,S.settings.lignes-(held.length-sells.length));
   var heldSet={};held.forEach(function(t){heldSet[t]=1});
-  var cands=S.ranked.filter(function(r){return!heldSet[r.t.toUpperCase()]&&r.price>=r.ma200&&S.rang[r.t.toUpperCase()]<=S.settings.sortie});
+  var cands=S.ranked.filter(function(r){return!heldSet[r.t.toUpperCase()]&&S.rang[r.t.toUpperCase()]<=S.settings.sortie});
   var buys=cands.slice(0,libres),wait=cands.slice(libres,libres+5);
   var parLigneEUR=S.settings.capital/S.settings.lignes;
   buys.forEach(function(r){r.qty=Math.floor(parLigneEUR*S.settings.fx/r.price)});
@@ -367,7 +366,6 @@ function statusOf(t){
   if(p.held[t])return sellReason(t)?{k:"sell",l:"Vendre"}:{k:"hold",l:"Conserver"};
   if(p.buys.some(function(r){return r.t.toUpperCase()===t}))return{k:"buy",l:"Acheter"};
   var r=S.byTicker[t];
-  if(r&&r.up&&r.price<r.ma200)return{k:"hold",l:"Cours < MM200"};
   if(r&&r.up)return{k:"wait",l:"En attente"};
   return{k:"hold",l:"Hors règle"};
 }
@@ -491,7 +489,7 @@ function renderBoard(){
   $("boardInfo").textContent="Les "+top.length+" meilleurs ratios parmi les "+S.ranked.length+" actions dont la MM20 est au-dessus de la MM200";
   b.innerHTML=top.map(function(r,i){
     var st=statusOf(r.t),w=Math.max(4,Math.min(100,(r.ratio-1)/maxR*100));
-    var tag=st.k==="buy"?'<span class="tag buy">À acheter</span>':st.k==="sell"||st.l==="Conserver"?'<span class="tag held">Détenue</span>':st.l==="Cours < MM200"?'<span class="tag">Cours &lt; MM200</span>':'<span class="tag">En attente</span>';
+    var tag=st.k==="buy"?'<span class="tag buy">À acheter</span>':st.k==="sell"||st.l==="Conserver"?'<span class="tag held">Détenue</span>':'<span class="tag">En attente</span>';
     return '<li class="row" role="option" tabindex="0" data-t="'+esc(r.t)+'" aria-selected="'+(r.t.toUpperCase()===S.selected)+'">'+
       '<span class="rank">'+(i+1)+'</span><div><div>'+libelle(r.t)+'</div>'+
       '<div class="meter" aria-hidden="true"><span style="width:'+w+'%"></span></div>'+
@@ -527,7 +525,6 @@ function renderDetail(){
   else if(st.l==="Conserver")why.push("Vous la détenez et elle reste dans le top "+S.settings.sortie+" (classée "+S.rang[t]+"e) : on la garde.");
   else if(st.k==="buy")why.push("MM20 au-dessus de la MM200 et parmi les meilleurs ratios non détenus, avec une place libre.");
   else if(st.k==="wait")why.push("En tendance haussière, mais "+(rank<0?"":"classée "+(rank+1)+"e : ")+"pas de place libre pour elle aujourd’hui.");
-  else if(st.l==="Cours < MM200")why.push("Bon ratio, mais le cours ("+fmt(r.price)+" $) est sous la MM200 ("+fmt(r.ma200)+" $) : la règle ne l’achète pas.");
   else why.push("Sa MM20 est sous sa MM200 : la règle ne l’achète pas.");
   if(r.crossType)why.push("Dernier croisement "+r.crossType+" le "+new Date(r.crossDate+"T12:00:00").toLocaleDateString("fr-FR")+".");
   el.innerHTML='<div class="panel-head"><div><h2>'+esc(r.n&&r.n!==r.t?r.n:r.t)+' <span class="muted small">'+(r.n&&r.n!==r.t?"– "+esc(r.t):"")+(r.s?" · "+esc(r.s):"")+'</span></h2>'+
